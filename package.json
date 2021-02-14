@@ -1,6 +1,6 @@
 {
   "name": "@sknk/object-validator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,18 @@
   },
   "keywords": [
     "schema",
-    "validator",
-    "object-validator",
-    "compose"
+  "validator",
+  "object-validator",
+  "compose"
   ],
   "author": "sandeepkumaar.c",
   "license": "ISC",
   "devDependencies": {
     "is-equal": "^1.6.1",
     "riteway": "^6.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandeepkumaar/object-validator"
   }
 }

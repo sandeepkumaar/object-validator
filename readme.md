@@ -62,8 +62,6 @@ let validateExpiryDate = (user) => {
   throw TypeError('Invalid Expiry. Expiry date is before the purchase date');
 };
 
-
-
 let assignDefaults = ({isPremium=false, ...rest}) => ({...rest, isPremium});
 
 const validateUser = composeValidators(
