@@ -1,7 +1,12 @@
 # object-validator
 Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects
 
-## How it is different from others
+## npm
+Install: `npm install @sknk/object-validator`  
+Test: `npm test`  
+Run examples: `npm run example`  
+
+## How is it different from others
 - Every schema based validation library has their own way of constructing the schema. It introduces a DSL and requires some knowledge on the docs. 
 see: [validator](#simple-validator)
 - Duplicate declarations. When multiple props share the same validations, they are required to be specified for each props. 
@@ -26,6 +31,7 @@ if(!result.error) {
 ```
 see: [idiomatic usage](#idiomatic-usage)
 
+
 ## Usage
 ```javascript
 const {validate, composeValidators, pipe } = require('@sknk/object-validator');
@@ -43,7 +49,7 @@ const isEmail = require('validator/lib/isEmail');
 let email = (pair) => {
   let {key, value} = pair;
   if(isEmail(value)) return pair;
-  throw TypeError(`Expected {${key}} to be of type ${expected}. Given {${key}: ${value}}`);
+  throw TypeError(`Expected {${key}} to be of type email. Given {${key}: ${value}}`);
 };
 
 const user = {
@@ -130,8 +136,8 @@ let obj = validateStringProps({
 
 });
 ```
-Pass the object to validate. This will validate only `name, city` props to be strings.
-When validation fails it throws error.
+Pass the object to validate. This will validate only `name, city` props to be strings.  
+When validation fails it throws error.   
 
 Note: 
 Using curried function allows us to get these partial functions that can be applied to 
@@ -156,11 +162,11 @@ Make props optional by suffixing the prop nam with "?"
 ```
 validateStringProps(["name", "age", "city?"]);
 ```
-this will validate the city only if its exists. else it will skip.
+this will validate the city only if its exists. else it will skip.  
 
 
 Now we have the capability to use/compose predicates into a **validator** function 
-that can be  applied to multiple similar props in an object
+that can be  applied to multiple similar props in an object  
 
 ### Custom validation error
 You can also throw custom error overiding what predicate function throws
@@ -205,8 +211,8 @@ callback fn is supplied with error thrown by the validator. you can either retur
 rethrow with more error info
 
 ### Comparing props
-`composeValidator` is a *pipe* function that supplies the same obj to all the validators in the array
-we write a custom function that takes the object and perform validation by comparing props
+`composeValidator` is a *pipe* function that supplies the same obj to all the validators in the array.  
+we write a custom function that takes the object and perform validation by comparing props   
 Note: the custom function should follow the rules of composability. ie. pure, identity function
 ```
 let obj = {
