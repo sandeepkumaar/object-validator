@@ -1,0 +1,21 @@
+{
+  "name": "@sknk/object-validator",
+  "version": "1.0.0",
+  "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test.js predicates/**/*.test.js"
+  },
+  "keywords": [
+    "schema",
+    "validator",
+    "object-validator",
+    "compose"
+  ],
+  "author": "sandeepkumaar.c",
+  "license": "ISC",
+  "devDependencies": {
+    "is-equal": "^1.6.1",
+    "riteway": "^6.1.2"
+  }
+}
