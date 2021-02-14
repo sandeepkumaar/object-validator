@@ -3,16 +3,16 @@ Functions over Object Schemas, composable assertions, customizable errors - vali
 
 ## How it is different from others
 - Every schema based validation library has their own way of constructing the schema. It introduces a DSL and requires some knowledge on the docs. 
-see: [validator](#Simple validator)
+see: [validator](#simple-validator)
 - Duplicate declarations. When multiple props share the same validations, they are required to be specified for each props. 
-see: [validator](#Simple validator)
+see: [validator](#simple-validator)
 - They usally have their own validation system, their own way of throwing/returing validation errors/success. 
-see:  [customError](#Custom validation error)
+see:  [customError](#custom-validation-error)
 - Since Validation libs has their own validation system and includes many validators built in. they are usually bigger in size.
 It may be an overkill for front-end apps that may only need typecheck or few basic validations. 
-see:  [extend with other libs](#Extending with other validation modules)
+see:  [extend with other libs](#extending-with-other-validation-modules)
 - Schema configurations become difficult/not possible if we want to validate based on other properties in the object. 
-see: [compare props](#Comparing props)
+see: [compare props](#comparing-props)
 - Most schema validation libs dont care much on sanitizing the props. Like assigning sensible defaults. see: [assign defaults](assign defaults)
 - The results of the validation usually they requires another conditional check to determine the flow
 Eg: 
@@ -24,13 +24,19 @@ if(!result.error) {
   // throw or return 
 }
 ```
-see: [idiomatic usage](#Idiomatic usage)
+see: [idiomatic usage](#idiomatic-usage)
 
 ## Usage
 ```javascript
 const {validate, composeValidators, pipe } = require('@sknk/object-validator');
-const {validate, composeValidators, pipe } = require('./');
-const { string, maxString, minNumber, minDate, maxDate, boolean } = require('@sknk/object-validator/predicates');
+const { 
+  string, 
+  maxString, 
+  minNumber, 
+  minDate, 
+  maxDate,
+  boolean 
+} = require('@sknk/object-validator/predicates');
 const isEmail = require('validator/lib/isEmail');
 
 // wrap as a predicate fn
