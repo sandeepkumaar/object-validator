@@ -2,7 +2,8 @@
   "name": "@sknk/object-validator",
   "version": "1.0.2",
   "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
-  "main": "index.js",
+  "type": "module",
+  "main": "index2.js",
   "scripts": {
     "example": "node example.js",
     "test": "riteway test.js predicates/**/*.test.js"

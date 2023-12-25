@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+
+    "module": "es2022", //module system require vs import
+    "moduleResolution": "node", //for importing commonjs module packages
+    "allowSyntheticDefaultImports": true, // for importing single export default
+    "target": "es2022", // transpile to, required for lib. both should be same
+    //"lib": "es2022", //ecmascript api support, inferred from target
+
+    // expects types for all files and libs
+    "strict": true,
+    // may replace eslint
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    //"noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true
+
+    // required for packages
+    //"declaration": true,
+    //"emitDeclarationOnly": true,
+    //"declarationMap": true,
+    //"outDir": "ts-types",
+  },
+  "include": ["index2.js"]
+
+}
