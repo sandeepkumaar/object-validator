@@ -21,6 +21,7 @@ const validate = function(predicates, decorateError) {
       try {
         return predicate(value);
       } catch(e) {
+        if(decorateError) decorateError(e);
         throw e;
       }
     }

@@ -6,10 +6,15 @@ let obj = {
   age: 24
 };
 /* check individual value */
-validate([string])(24);
+//validate([string])(24);
 
 
-/* 
+/* decorateError */
+
+validate([string], (e) => {
+  e.message = 'should be a string'
+  //return e;
+})(24);
 
 /*
 let validator = schema({
