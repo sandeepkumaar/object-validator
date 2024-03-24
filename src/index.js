@@ -27,15 +27,19 @@ import { isOptional, removeOptionalMark, defaults } from './utils.js';
 //  }
 //}
 
-const validator = (predicates, decorateError) => ( value, key=defaults.KEY) =>  {
+const validator = (predicates, decorateError) => ( value, key) =>  {
   //console.log('input', predicates, decorateError, value, key);
   for(let predicate of predicates) {
     try {
-      predicate(value, key);
+      predicate(value);
     } catch(e) {
       // addtional error info
       if(e instanceof Error) {
-        e.key = key;
+        // replace 'input' with custom key provided
+        e.message = key && e.message.includes(defaults.KEY) 
+          ? e.message.replaceAll(defaults.KEY, key)
+          : e.message;
+        e.key = key; // will be undefined when no key provided
         e.value = value;
         e.predicate = predicate.name
       }
@@ -79,12 +83,14 @@ const composeValidators = (validators, opts=defaults.composeOpts) => (_obj, onEr
   let {aggregateError} = opts;
   let aggregateErrors = [];
   for(let validator of validators) {
-    console.log(validator);
     try {
       obj = validator(obj, opts);
     } catch(e) {
       if(opts.aggregateError) {
-        aggregateErrors.push(e);
+        aggregateErrors = e instanceof AggregateError 
+          ? [...aggregateErrors, ...e.errors]
+          : [...aggregateErrors, e]
+
         continue;
       }
       throw e;
@@ -99,8 +105,8 @@ const composeValidators = (validators, opts=defaults.composeOpts) => (_obj, onEr
   
 
 export {
-  validator as v,
-  vSchema,
+  validator as v, // this for is for single argument validator
+  vSchema, // rename this to vObject
   composeValidators
 }
 
@@ -108,30 +114,10 @@ export {
 /**
  * TODO
  * Composable predicates
- *  - Error key will be added from the lib thru regex pattern
- * simplify functions
- *
+ *  [x] Error key will be added from the lib thru regex pattern
+ * 
  *
  *
  *
 */
 
-//let validator = composeValidators([
-//  vSchema({
-//    'name': v([string, maxString(3)], (e) => {/*optional error decorator*/throw e}),
-//    'age': v([number]),
-//    'address?': v([string]),
-//  }),
-//  compareDates, // (date1, date2) => thrwo
-//  assignDefaults
-//], { aggregateError: true});
-//
-//let validator = composeValidators([
-//  vObj({
-//    'name': [string, maxString(3), (e) => {/*optional error decorator*/throw e}],
-//    'age': [number],
-//    'address?': [string],
-//  }),
-//  compareDates, // (date1, date2) => thrwo
-//  assignDefaults
-//], { aggregateError: true});

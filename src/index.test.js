@@ -18,7 +18,8 @@ test('v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any',
 
   await t.test('Given predicates: [defined, string], value: "x", key: undefined ; should throw TypeError with default key', () => {
     let [error, result] = tryCatch(v([defined, string]), 1);
-    assert.deepStrictEqual(error.key,'input');
+    assert.deepStrictEqual(error.message,'Expected {input} to be string. Given {input: 1}');
+    assert.deepStrictEqual(error.key, undefined);
   })
   await t.test('Given predicates: [defined, string], value: "x", key: "customKey" ; should throw TypeError with addnProps', () => {
     let [error, result] = tryCatch(v([defined, string]), 1, 'customKey');
@@ -166,7 +167,7 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
     assert.deepStrictEqual(error?.toString(), 'TypeError: Expected offerDate to be before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024');
   })
 
-  await t.test('Given defaults ; should apply defaults ', () => {
+  await t.test('Given defaults; should apply defaults', () => {
     let obj = {
       name: 'x',
       age: 24,
@@ -186,7 +187,7 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
     assert.deepStrictEqual(actual, {...obj, address: 'N/A'});
   })
 
-  await t.skip('Given aggregateError:true ; should throw AggregateError', () => {
+  await t.test('Given aggregateError:true; should throw AggregateError', () => {
     let obj = {
       name: 'x',
       age: '24', // Error
@@ -203,24 +204,41 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
       assignDefaults
     ], { aggregateError: true});
     let [error] = tryCatch(objValidator, obj);
-    assert.deepStrictEqual(error, '');
-  })
-
-  await t.test('simplify test', () => {
-    composeValidators([
-      vObj({
-        'name': [string, number, (e) => {},
-        'age': [number]
-      }, {
-        aggregateErrors: false,
-      })
-    ])
+    assert.deepStrictEqual(error.message, "composeValidator Errors");
+    assert.deepStrictEqual(error.errors.length, 2);
+    assert.deepStrictEqual(error.errors[0].message, "Expected {age} to be number. Given {age: 24}");
+    assert.deepStrictEqual(error.errors[1].message, "Expected offerDate to be before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024");
+    
   })
 
 
 
-  await t.todo('Given aggregateError: true for both vSchema, composeValidator ; should flat the AggregateErrors');
-  await t.todo('Given onError on vSchema in isolation ; should return from onError');
+
+  await t.test('Given aggregateError: true for both vSchema, composeValidator ; should flat the AggregateErrors', () => {
+    let obj = {
+      name: 'x',
+      age: '24', // Error
+      offerDate: '04/01/2024', // Error
+      joiningDate: '03/17/2024', 
+      address: 0, // Error
+    }
+    let objValidator = composeValidators([
+      vSchema({
+        'name': v([string]),
+        'age': v([number]),
+        'address?': v([string]),
+      }, {aggregateError: true}),
+      compareDates,
+      assignDefaults
+    ], { aggregateError: true});
+    let [error] = tryCatch(objValidator, obj);
+    assert.deepStrictEqual(error.message, "composeValidator Errors");
+    assert.deepStrictEqual(error.errors.length, 3);
+
+  });
+
+
+  await t.test('Given onError on vSchema in isolation ; should return from onError');
   await t.todo('Given onError on vSchema inside composeValidator ; should ignore onError');
   await t.todo('Given onError on composeValidator ; should return from onError');
 

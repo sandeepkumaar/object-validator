@@ -6,19 +6,21 @@ import { defaults } from '../utils.js'
  * @returns {string} 
  * @throws {TypeError} 
 */
-const string = function(value, key=defaults.KEY) {
+
+let key = defaults.KEY;
+const string = function(value) {
   let expected = 'string';
   if(typeof value === expected) return value;
   throw TypeError(`Expected {${key}} to be ${expected}. Given {${key}: ${value}}`);
 };
 
-const defined = function(value, key=defaults.KEY) {
+const defined = function(value) {
   if(typeof value !== undefined) return value;
   throw TypeError(`Expected {${key}} to be defined. Given {${key}: ${value}}`);
 };
 
 
-const number = function(value, key=defaults.KEY) {
+const number = function(value) {
   if(typeof value === 'number') return value;
   throw TypeError(`Expected {${key}} to be number. Given {${key}: ${value}}`);
 };
