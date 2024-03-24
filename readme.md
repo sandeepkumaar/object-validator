@@ -297,3 +297,16 @@ when error is thrown, express common error handler is called that returns the er
 
 ## license
 MIT
+
+
+
+## TODO
+- setup typescript linting
+- setup eslint linting on commit
+- setup build for commonjs
+- test for predicates
+- setup pipeline to publish
+
+
+
+

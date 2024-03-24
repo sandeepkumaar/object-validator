@@ -25,7 +25,5 @@
     //"declarationMap": true,
     //"outDir": "ts-types",
   },
-  "include": ["index.js", "src/**/*.js"],
-  "exclude": ["src/**/*.test.js"]
-
+  "include": ["index.js", "src/**/*.js"]
 }

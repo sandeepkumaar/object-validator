@@ -255,8 +255,9 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
 
 
 })
-test.todo('write test for vKeys?');
-test.todo('write test predicates');
+// Not implementing
+// test.todo('write test for vKeys?');
+test.todo('write test predicates - composability');
 
 
 
