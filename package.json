@@ -1,25 +1,33 @@
 {
   "name": "@sknk/object-validator",
   "version": "1.0.2",
-  "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
+  "description": "function argument and Schema validator, composable predicates, customizable errors, extends with external validation libraries - minimal footprint",
   "type": "module",
-  "main": "index2.js",
+  "main": "src/index.js",
   "scripts": {
     "example": "node example.js",
-    "test": "node --test --test-reporter=tap test2.js"
+    "test": "node --test src/**/*.test.js"
   },
-  "keywords": [
-    "schema",
-    "validator",
-    "object-validator",
-    "compose"
-  ],
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5",
+    "try-catch": "^3.0.1",
+    "typescript": "^5.3.3"
+  },
   "author": "sandeepkumaar.c",
   "license": "ISC",
-  "devDependencies": {
-    "is-equal": "^1.6.1",
-    "tap-nirvana": "^1.1.0"
-  },
+  "keywords": [
+    "schema",
+    "argument",
+    "object",
+    "type guards",
+    "validator",
+    "object-validator",
+    "compose",
+    "zero dependencies"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/sandeepkumaar/object-validator"
