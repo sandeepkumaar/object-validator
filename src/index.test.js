@@ -105,8 +105,8 @@ test('vSchema(schema: object, opts: object, obj: object) => object', async (t) =
       'name': v([string]),
       'age': v([number]),
       'address?': v([string]),
-    }, {aggregateError: true});
-    let [error] = tryCatch(validator, obj);
+    });
+    let [error] = tryCatch(validator, obj, {aggregateError: true});
     assert.deepStrictEqual(error?.toString(), "AggregateError: vSchema Errors");
     assert.deepStrictEqual(error?.errors[0]?.toString(), "TypeError: Expected {age} to be number. Given {age: 24}");
     assert.deepStrictEqual(error?.errors[1]?.toString(), "TypeError: Expected {address} to be string. Given {address: 4}");
@@ -187,12 +187,13 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
     assert.deepStrictEqual(actual, {...obj, address: 'N/A'});
   })
 
-  await t.test('Given aggregateError:true; should throw AggregateError', () => {
+  await t.test('Given aggregateError:true; should aggregate all errors including vschema errors', () => {
     let obj = {
       name: 'x',
       age: '24', // Error
       offerDate: '04/01/2024', // Error
       joiningDate: '03/17/2024', // Error
+      address: 0, // Error
     }
     let objValidator = composeValidators([
       vSchema({
@@ -202,45 +203,55 @@ test('composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
       }),
       compareDates,
       assignDefaults
-    ], { aggregateError: true});
-    let [error] = tryCatch(objValidator, obj);
+    ]);
+    let [error] = tryCatch(objValidator, obj, {aggregateError: true});
+
     assert.deepStrictEqual(error.message, "composeValidator Errors");
-    assert.deepStrictEqual(error.errors.length, 2);
+    assert.deepStrictEqual(error.errors.length, 3);
     assert.deepStrictEqual(error.errors[0].message, "Expected {age} to be number. Given {age: 24}");
-    assert.deepStrictEqual(error.errors[1].message, "Expected offerDate to be before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024");
+    assert.deepStrictEqual(error.errors[1].message, "Expected {address} to be string. Given {address: 0}");
+    assert.deepStrictEqual(error.errors[2].message, "Expected offerDate to be before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024");
     
   })
 
 
-
-
-  await t.test('Given aggregateError: true for both vSchema, composeValidator ; should flat the AggregateErrors', () => {
+  await t.test('Given onError on composeValidator ; should pass error to onError and return', () => {
     let obj = {
       name: 'x',
       age: '24', // Error
       offerDate: '04/01/2024', // Error
-      joiningDate: '03/17/2024', 
+      joiningDate: '03/17/2024', // Error
       address: 0, // Error
     }
-    let objValidator = composeValidators([
+    let userSchema = composeValidators([
       vSchema({
         'name': v([string]),
         'age': v([number]),
         'address?': v([string]),
-      }, {aggregateError: true}),
+      }),
       compareDates,
       assignDefaults
-    ], { aggregateError: true});
-    let [error] = tryCatch(objValidator, obj);
-    assert.deepStrictEqual(error.message, "composeValidator Errors");
-    assert.deepStrictEqual(error.errors.length, 3);
+    ]);
+    // aggregate: false
+    {
+      let actual = userSchema(obj, {onError: (e) => {
+        assert.deepStrictEqual(e.message, "Expected {age} to be number. Given {age: 24}");
+        return false;
+      }})
+      assert.deepStrictEqual(actual, false);
+    }
+    // aggregate: true
+    {
+      let actual = userSchema(obj, {onError: (e) => {
+        assert.deepStrictEqual(e.message, "composeValidator Errors");
+        assert.deepStrictEqual(e.errors.length, 3);
+        return false;
 
+      }, aggregateError: true})
+      assert.deepStrictEqual(actual, false);
+    }
   });
 
-
-  await t.test('Given onError on vSchema in isolation ; should return from onError');
-  await t.todo('Given onError on vSchema inside composeValidator ; should ignore onError');
-  await t.todo('Given onError on composeValidator ; should return from onError');
 
 
 })

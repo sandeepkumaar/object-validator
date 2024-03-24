@@ -7,25 +7,6 @@ import { isOptional, removeOptionalMark, defaults } from './utils.js';
  * @param {Function} [decorateError] - Optional decorater that adds key, value, predicate used which failed
  * @returns {Function} _validator - closure function that iterates the value against the predicates
 */
-//const validator = function(predicates, decorateError) {
-//  return function _validator(value) {
-//    let {key} = this || defaultKey;
-//    for(let predicate of predicates) {
-//      try {
-//        return predicate(value);
-//      } catch(e) {
-//        // addtional error info
-//        if(e instanceof Error) {
-//          e.key = key;
-//          e.value = value;
-//          e.predicate = predicate.name
-//        }
-//        if(decorateError) decorateError(e);
-//        throw e;
-//      }
-//    }
-//  }
-//}
 
 const validator = (predicates, decorateError) => ( value, key) =>  {
   //console.log('input', predicates, decorateError, value, key);
@@ -50,8 +31,7 @@ const validator = (predicates, decorateError) => ( value, key) =>  {
   return value;
 };
 
-//const vSchemaOpts = { accumulateError: false };
-const vSchema = (schema, opts=defaults.schemaOpts) => (obj) => {
+const vSchema = (schema) => (obj, opts=defaults.schemaOpts) => {
   let {aggregateError} = opts;
   let aggregateErrors = [];
   for(let [key, validator] of Object.entries(schema)) {
@@ -77,10 +57,10 @@ const vSchema = (schema, opts=defaults.schemaOpts) => (obj) => {
   return obj;
 }
 
-const composeValidators = (validators, opts=defaults.composeOpts) => (_obj, onError) => {
+const composeValidators = (validators) => (_obj, opts=defaults.composeOpts) => {
   // check inputs
   let obj = _obj;
-  let {aggregateError} = opts;
+  let {aggregateError, onError} = opts;
   let aggregateErrors = [];
   for(let validator of validators) {
     try {
@@ -93,11 +73,19 @@ const composeValidators = (validators, opts=defaults.composeOpts) => (_obj, onEr
 
         continue;
       }
+      if(onError) {
+        return onError(e)
+      }
       throw e;
     }
   };
   if(aggregateErrors.length) {
-    throw new AggregateError(aggregateErrors, 'composeValidator Errors');
+    let e = new AggregateError(aggregateErrors, 'composeValidator Errors');
+
+    if(onError) {
+      return onError(e)
+    }
+    throw e;
   }
   return obj;
 
@@ -109,15 +97,4 @@ export {
   vSchema, // rename this to vObject
   composeValidators
 }
-
-
-/**
- * TODO
- * Composable predicates
- *  [x] Error key will be added from the lib thru regex pattern
- * 
- *
- *
- *
-*/
 
