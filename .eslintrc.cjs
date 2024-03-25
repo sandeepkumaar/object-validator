@@ -9,7 +9,7 @@ module.exports = {
   },
   "extends": [
     "eslint:recommended",
-    "prettier"
+    "plugin:prettier/recommended"
   ],
   "plugins": [
     'import'
@@ -17,6 +17,35 @@ module.exports = {
   rules: {
     'import/extensions': ['error', 'always']
   },
-  ignorePatters: ['src/**/*.test.js']
+  //ignorePatterns: ['src/**/*.test.js']
 };
 
+// New config type - Flat has issues with import file extension plugin
+
+//import eslintImport from 'eslint-plugin-import'; 
+//import prettier from 'eslint-plugin-prettier/recommended';
+//
+//export default {
+//  //prettier,
+//  //overrides: [
+//  //  {
+//  //    files: ["src/**/*.js"],
+//  //    parseOptions: {
+//  //      sourceType: 'module'
+//  //    },
+//  //    rules: {
+//  //      'import/extensions': ['error', 'always']
+//  //    }
+//  //  }
+//  //],
+//  {
+//    files: ["src/**/*.js"],
+//    plugin: {
+//      eslintImport
+//    },
+//    rules: {
+//      'import/extensions': ['error', 'always']
+//    }
+//
+//  }
+//};
