@@ -1,12 +1,12 @@
 export const defaults = {
-  KEY: 'input',
+  KEY: "input",
   schemaOpts: {
-    aggregateError: false
+    aggregateError: false,
   },
   composeOpts: {
-    aggregateError: false
-  }
-}
+    aggregateError: false,
+  },
+};
 
-export const isOptional = (key) => key.endsWith('?');
+export const isOptional = (key) => key.endsWith("?");
 export const removeOptionalMark = (key) => key.slice(0, -1);

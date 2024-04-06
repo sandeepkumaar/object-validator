@@ -1,7 +1,8 @@
 module.exports = {
   env: {
-    browser: true,
-    node: true
+    //browser: true, // adds browser globals
+    node: true, // adds node globals
+    es2023: true, // support es2023 features
   },
   parserOptions: {
     ecmaVersion: 'latest',

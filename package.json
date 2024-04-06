@@ -5,16 +5,14 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src",
+    "lint:js": "eslint src",
+    "lint:type": "tsc",
     "lint:fix": "eslint src --fix",
-    "typecheck": "tsc",
-    "test": "node --test src/**/*.test.js"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint:fix",
-      "pre-push": "npm run lint && npm run typecheck"
-    }
+    "lint": "npm run lint:js && npm run lint:type",
+    "test": "node --test src/**/*.test.js",
+    "prepare": "husky",
+    "pre-commit": "npm run lint:fix",
+    "pre-push": "npm run lint"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
