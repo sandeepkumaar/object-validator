@@ -1,6 +1,6 @@
 {
   "name": "@sknk/object-validator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
   "main": "index.js",
   "scripts": {
