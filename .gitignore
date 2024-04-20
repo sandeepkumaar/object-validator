@@ -1,1 +1,5 @@
 node_modules
+
+#ignore generated types
+index.d.ts
+src/**/*d.ts

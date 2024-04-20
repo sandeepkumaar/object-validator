@@ -10,7 +10,8 @@ module.exports = {
   },
   "extends": [
     "eslint:recommended",
-    "plugin:prettier/recommended"
+    "prettier",
+    //'plugin:@typescript-eslint/recommended-type-checked' // for d.ts files
   ],
   "plugins": [
     'import'
