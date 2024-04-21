@@ -11,14 +11,11 @@
     "lint:check": "eslint src",
     "lint:fix": "eslint src --fix",
     "lint": "npm run lint:check && npm run type:check",
-    "prettier": "prettier --write",
+    "format": "prettier --write --no-config src/**/*.js",
     "test": "node --test src/**/*.test.js",
     "prepare": "husky",
-    "pre-commit": "npm run prettier",
+    "pre-commit": "npm run type:remove && npm run format && git add .",
     "pre-push": "npm run lint"
-  },
-  "lint-staged": {
-    "*": "npm run pre-commit"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
@@ -27,7 +24,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "try-catch": "^3.0.1",
     "typescript": "^5.3.3",

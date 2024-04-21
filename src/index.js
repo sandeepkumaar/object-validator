@@ -1,37 +1,53 @@
 import { isOptional, removeOptionalMark, defaults } from "./utils.js";
-
-/*
 /**
- * Creates a closure with predicates
- * @param {Function[]} predicates - Array of predicates
- * @param {Function} [decorateError] - Optional decorater that adds key, value, predicate used which failed
- * @returns {Function} _validator - closure function that iterates the value against the predicates
+ * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
+ * @typedef {(err: Error) => Error} ThrowableFunction
+ * @typedef {<T>(value: T, key?: string) => T | never} CoreValidator
 */
 
+
+/**
+ * Core validator throws on validation failure or returns the value on success
+ * @param predicates - Array of predicates where value is passed against
+ * @param [decorateError] - Optional Error handler to add/simplify error info. it always throws whats returned
+ * @param value - value to validate
+ * @param [key] - Optional key supplied by composeValidator for objects
+ *
+ * @typedef {import('./predicates/string.js').Predicate} Predicate
+ * @type {(predicates: Predicate[], decorateError?: ThrowableFunction) => Predicate}
+*/
 const validator = (predicates, decorateError) => (value, key) => {
   //console.log('input', predicates, decorateError, value, key);
   for (let predicate of predicates) {
     try {
-      predicate(value);
+      predicate(value, key);
     } catch (e) {
-      // addtional error info
-      if (e instanceof Error) {
-        // replace 'input' with custom key provided
-        e.message =
-          key && e.message.includes(defaults.KEY)
-            ? e.message.replaceAll(defaults.KEY, key)
-            : e.message;
-        e.key = key; // will be undefined when no key provided
-        e.value = value;
-        e.predicate = predicate.name;
+      /** @type {CustomError} */
+      let err = e instanceof Error ? e : Error(String(e));
+      // replace 'input' with custom key provided
+      err.message =
+        key && err.message.includes(defaults.KEY)
+        ? err.message.replaceAll(defaults.KEY, key)
+        : err.message;
+      err.key = key; // will be undefined when no key provided
+      err.value = value;
+      err.predicate = predicate.name;
+      if (decorateError) {
+        err = decorateError(err);
       }
-      if (decorateError) decorateError(e);
-      throw e;
+      throw err;
     }
   }
   return value;
 };
 
+/**
+ * @param schema - schema object used to declare the validators
+ * @param obj - Input obj
+ * @param [opts] - Option to aggregateError 
+ * @type {<T extends Record<string, any>>(schema: Record<string, Predicate>) => 
+ * (obj: T, opts?: typeof defaults.schemaOpts) => T | never} 
+*/
 const vSchema =
   (schema) =>
   (obj, opts = defaults.schemaOpts) => {
@@ -60,16 +76,22 @@ const vSchema =
     return obj;
   };
 
+
+/**
+ * @typedef {<T extends Record<string, any>>(obj: T, opts?: typeof defaults.schemaOpts) => T | never} Validator
+ * @type {<T extends object>(validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never} 
+*/
 const composeValidators =
   (validators) =>
   (_obj, opts = defaults.composeOpts) => {
     // check inputs
     let obj = _obj;
     let { aggregateError, onError } = opts;
+    /** @type AggregateError[]*/
     let aggregateErrors = [];
     for (let validator of validators) {
       try {
-        obj = validator(obj, opts);
+        obj = validator(obj, {aggregateError});
       } catch (e) {
         if (aggregateError) {
           aggregateErrors =
