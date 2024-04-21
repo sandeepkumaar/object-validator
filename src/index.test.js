@@ -18,7 +18,7 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
       let [error] = tryCatch(v([defined, string]), undefined);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {input} to be string. Given {input: undefined}",
+        "TypeError: Expected {input} to be defined. Given {input: undefined}",
       );
     },
   );
@@ -55,6 +55,7 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
         v([defined, string], (e) => {
           e.message = "customError message";
           e.key = "customErrorKey";
+          return e;
         }),
         undefined,
       );
