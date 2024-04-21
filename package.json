@@ -12,10 +12,10 @@
     "lint:fix": "eslint src --fix",
     "lint": "npm run lint:check && npm run type:check",
     "format": "prettier --write --no-config src/**/*.js",
-    "test": "node --test src/**/*.test.js",
+    "test": "node --test ./src/index.test.js",
     "prepare": "husky",
     "pre-commit": "npm run type:remove && npm run format && git add .",
-    "pre-push": "npm run lint"
+    "pre-push": "npm run lint && npm test"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
