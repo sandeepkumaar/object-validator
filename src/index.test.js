@@ -4,6 +4,8 @@ import tryCatch from "try-catch";
 import { string, defined, number } from "./predicates/string.js";
 import { v, vSchema, composeValidators } from "./index.js";
 
+console.log("ENV: ", process.env.NODE_ENV);
+
 test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any", async (t) => {
   await t.test(
     'Given predicates: [defined, string], value: "x" ; should return "x"',
