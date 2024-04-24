@@ -3,8 +3,7 @@ import { isOptional, removeOptionalMark, defaults } from "./utils.js";
  * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
  * @typedef {(err: Error) => Error} ThrowableFunction
  * @typedef {<T>(value: T, key?: string) => T | never} CoreValidator
-*/
-
+ */
 
 /**
  * Core validator throws on validation failure or returns the value on success
@@ -15,7 +14,7 @@ import { isOptional, removeOptionalMark, defaults } from "./utils.js";
  *
  * @typedef {import('./predicates/string.js').Predicate} Predicate
  * @type {(predicates: Predicate[], decorateError?: ThrowableFunction) => Predicate}
-*/
+ */
 const validator = (predicates, decorateError) => (value, key) => {
   //console.log('input', predicates, decorateError, value, key);
   for (let predicate of predicates) {
@@ -27,8 +26,8 @@ const validator = (predicates, decorateError) => (value, key) => {
       // replace 'input' with custom key provided
       err.message =
         key && err.message.includes(defaults.KEY)
-        ? err.message.replaceAll(defaults.KEY, key)
-        : err.message;
+          ? err.message.replaceAll(defaults.KEY, key)
+          : err.message;
       err.key = key; // will be undefined when no key provided
       err.value = value;
       err.predicate = predicate.name;
@@ -44,10 +43,10 @@ const validator = (predicates, decorateError) => (value, key) => {
 /**
  * @param schema - schema object used to declare the validators
  * @param obj - Input obj
- * @param [opts] - Option to aggregateError 
- * @type {<T extends Record<string, any>>(schema: Record<string, Predicate>) => 
- * (obj: T, opts?: typeof defaults.schemaOpts) => T | never} 
-*/
+ * @param [opts] - Option to aggregateError
+ * @type {<T extends Record<string, any>>(schema: Record<string, Predicate>) =>
+ * (obj: T, opts?: typeof defaults.schemaOpts) => T | never}
+ */
 const vSchema =
   (schema) =>
   (obj, opts = defaults.schemaOpts) => {
@@ -76,11 +75,10 @@ const vSchema =
     return obj;
   };
 
-
 /**
  * @typedef {<T extends Record<string, any>>(obj: T, opts?: typeof defaults.schemaOpts) => T | never} Validator
- * @type {<T extends object>(validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never} 
-*/
+ * @type {<T extends object>(validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never}
+ */
 const composeValidators =
   (validators) =>
   (_obj, opts = defaults.composeOpts) => {
@@ -91,7 +89,7 @@ const composeValidators =
     let aggregateErrors = [];
     for (let validator of validators) {
       try {
-        obj = validator(obj, {aggregateError});
+        obj = validator(obj, { aggregateError });
       } catch (e) {
         if (aggregateError) {
           aggregateErrors =

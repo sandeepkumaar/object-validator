@@ -9,13 +9,14 @@
     "type:emit": " npm run type:remove && tsc --noEmit false --declaration --emitDeclarationOnly",
     "type:check": "tsc",
     "lint:check": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "lint": "npm run lint:check && npm run type:check",
-    "format": "prettier --write --no-config src/**/*.js",
+    "lint:fix": "eslint src --fix ",
+    "lint": "npm run format:check && npm run lint:check && npm run type:check",
+    "format:fix": "prettier --write --no-config 'src/**/*.js'",
+    "format:check": "prettier --check --no-config 'src/**/*.js'",
     "test": "node --test './src/index.test.js'",
     "prepare": "npm run type:emit",
     "setup": "husky",
-    "pre-commit": "npm run type:remove && npm run format && git add .",
+    "pre-commit": "npm run type:remove && npm run format:fix && git add .",
     "pre-push": "npm run lint && npm test"
   },
   "devDependencies": {
