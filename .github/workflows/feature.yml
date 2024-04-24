@@ -2,9 +2,7 @@ name: feature
 
 on: 
   push: 
-    branches: 
-      - '*'
-      - '!main'
+    branches-ignore: main
 
 jobs: 
   test: 
