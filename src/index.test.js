@@ -4,18 +4,20 @@ import tryCatch from "try-catch";
 import { string, defined, number } from "./predicates/string.js";
 import { v, vSchema, composeValidators } from "./index.js";
 
-console.log("ENV: ", process.env.NODE_ENV);
+/** @typedef {import('./index.js').CustomError} CustomError*/
 
 test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any", async (t) => {
   await t.test(
-    'Given predicates: [defined, string], value: "x" ; should return "x"',
+    //'Given predicates: [defined, string], value: "x" ; should return "x"',
+    "Given predicates and valid value, should return the given value",
     () => {
       assert.deepStrictEqual(v([defined, string])("x"), "x");
     },
   );
 
   await t.test(
-    "Given predicates: [defined, string], value: undefined ; should throw undefined TypeError",
+    //"Given predicates: [defined, string], value: undefined ; should throw undefined TypeError",
+    "Given predicates and invalid value, should throw invalid value error",
     () => {
       let [error] = tryCatch(v([defined, string]), undefined);
       assert.deepStrictEqual(
@@ -26,7 +28,8 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
   );
 
   await t.test(
-    'Given predicates: [defined, string], value: "x", key: undefined ; should throw TypeError with default key',
+    //'Given predicates: [defined, string], value: "x", key: undefined ; should throw TypeError with default key',
+    "Given predicates and invalid value without key, should throw invalid error with default key",
     () => {
       let [error] = tryCatch(v([defined, string]), 1);
       assert.deepStrictEqual(
@@ -37,7 +40,8 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
     },
   );
   await t.test(
-    'Given predicates: [defined, string], value: "x", key: "customKey" ; should throw TypeError with addnProps',
+    //'Given predicates: [defined, string], value: "x", key: "customKey" ; should throw TypeError with addnProps',
+    "Given predicates and invalid value with customKey, should throw invalid error with custom key",
     () => {
       let [error] = tryCatch(v([defined, string]), 1, "customKey");
       assert.deepStrictEqual(
@@ -51,7 +55,8 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
   );
 
   await t.test(
-    "Given predicates: [defined, string], decorateError: fn, value: undefined ; should throw custom Error",
+    //"Given predicates: [defined, string], decorateError: fn, value: undefined ; should throw custom Error",
+    "Given predicates and invalid value with Optional errorDecorator, should throw invalid error returned from decoratorFn",
     () => {
       let [error] = tryCatch(
         v([defined, string], (e) => {
@@ -68,11 +73,22 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
       assert.deepStrictEqual(error?.key, "customErrorKey");
     },
   );
+  await t.test.todo(
+    "Given predicates, should carry forward the values returned from each predicates",
+    () => {
+      let concat =
+        (str = "") =>
+        (value = "") =>
+          value + str;
+      //v([string, concat])
+    },
+  );
 });
 
 test("vSchema(schema: object, opts: object, obj: object) => object", async (t) => {
   await t.test(
-    'Given schema:{name: string, age: number}, obj: {name: "x", age: 24} ; should return obj',
+    //'Given schema:{name: string, age: number}, obj: {name: "x", age: 24} ; should return obj',
+    "Given schema and valid object, should return the given object",
     () => {
       let obj = {
         name: "x",
@@ -87,7 +103,8 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
   );
 
   await t.test(
-    'Given schema:{name: string, age: number}, obj: {name: "x", age: "24"} ; should throw Age Error',
+    //'Given schema:{name: string, age: number}, obj: {name: "x", age: "24"} ; should throw Age Error',
+    "Given schema and invalid obj, should throw invalid value error with the property key",
     () => {
       let obj = {
         name: "x",
@@ -106,7 +123,8 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
   );
 
   await t.test(
-    'Given schema:{name: string, age: number, address?: string}, obj: {name: "x", age: 24} ; should return obj',
+    //'Given schema:{name: string, age: number, address?: string}, obj: {name: "x", age: 24} ; should return obj',
+    "Given schema with optional key and a valid obj without that optional key, should ignore the optional key",
     () => {
       let obj = {
         name: "x",
@@ -123,7 +141,8 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
   );
 
   await t.test(
-    'Given schema:{name: string, age: number, address?: string}, obj: {name: "x", age: 24, address: "adsf"} ; should return obj',
+    //'Given schema:{name: string, age: number, address?: string}, obj: {name: "x", age: 24, address: "adsf"} ; should return obj',
+    "Given schema with optional key and object with invalid optional value, should throw invalid error",
     () => {
       let obj = {
         name: "x",
@@ -144,7 +163,8 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
   );
 
   await t.test(
-    "Given opts={aggregateError: true} ; should return AggregateError",
+    //"Given opts={aggregateError: true} ; should return AggregateError",
+    "Given schema with optional aggragateError, should throw AggregateError aggregating all errors in the object",
     () => {
       let obj = {
         name: "x",
@@ -169,6 +189,47 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
         error?.errors[1]?.toString(),
         "TypeError: Expected {address} to be string. Given {address: 4}",
       );
+    },
+  );
+
+  await t.test(
+    "Given schema with normal predicates, should have same validation behavior",
+    () => {
+      let obj = {
+        name: "x",
+        age: "24",
+        address: 4,
+      };
+      let validator = vSchema({
+        name: string,
+        age: number,
+        "address?": string,
+      });
+      let [error] = tryCatch(validator, obj);
+      assert.deepStrictEqual(
+        error?.toString(),
+        "TypeError: Expected {age} to be number. Given {age: 24}",
+      );
+      let [aggregateError] = tryCatch(validator, obj, { aggregateError: true });
+      assert.deepStrictEqual(
+        aggregateError?.toString(),
+        "AggregateError: vSchema Errors",
+      );
+      assert.deepStrictEqual(
+        aggregateError?.errors[0]?.toString(),
+        "TypeError: Expected {age} to be number. Given {age: 24}",
+      );
+      assert.deepStrictEqual(
+        aggregateError?.errors[1]?.toString(),
+        "TypeError: Expected {address} to be string. Given {address: 4}",
+      );
+    },
+  );
+
+  await t.test.todo(
+    "Given schema with predicates modifying the values, should modify value in the obj",
+    () => {
+      //let obj = { name: 'sandeep' }
     },
   );
 });
@@ -345,6 +406,7 @@ test("composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
     },
   );
 });
+
 // Not implementing
 // test.todo('write test for vKeys?');
 test.todo("write test predicates - composability");

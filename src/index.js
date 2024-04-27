@@ -2,7 +2,7 @@ import { isOptional, removeOptionalMark, defaults } from "./utils.js";
 /**
  * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
  * @typedef {(err: Error) => Error} ThrowableFunction
- * @typedef {<T>(value: T, key?: string) => T | never} CoreValidator
+ * @typedef {() => any | never} PipeFns
  */
 
 /**

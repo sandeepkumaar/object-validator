@@ -12,6 +12,6 @@
     "noImplicitReturns": true
   },
   "include": ["index.js", "src/**/*.js"],
-  "exclude": ["src/**/*.test.js"]
+  //"exclude": ["src/**/*.test.js"]
 
 }

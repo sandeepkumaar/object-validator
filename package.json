@@ -16,8 +16,14 @@
     "test": "node --test './src/index.test.js'",
     "prepare": "npm run type:emit",
     "setup": "husky",
-    "pre-commit": "npm run type:remove && npm run format:fix && git add .",
+    "pre-commit": "lint-staged",
     "pre-push": "npm run lint && npm test"
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run format:fix",
+      "git add ."
+    ]
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
@@ -26,6 +32,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "try-catch": "^3.0.1",
     "typescript": "^5.3.3",
