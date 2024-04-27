@@ -2,7 +2,7 @@ import { isOptional, removeOptionalMark, defaults } from "./utils.js";
 /**
  * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
  * @typedef {(err: Error) => Error} ThrowableFunction
- * @typedef {() => any | never} PipeFns
+ * @typedef {(arg0: any, key?: string) => any | never} Predicate
  */
 
 /**
@@ -12,14 +12,15 @@ import { isOptional, removeOptionalMark, defaults } from "./utils.js";
  * @param value - value to validate
  * @param [key] - Optional key supplied by composeValidator for objects
  *
- * @typedef {import('./predicates/string.js').Predicate} Predicate
  * @type {(predicates: Predicate[], decorateError?: ThrowableFunction) => Predicate}
  */
-const validator = (predicates, decorateError) => (value, key) => {
+const validator = (predicates, decorateError) => (_value, key) => {
   //console.log('input', predicates, decorateError, value, key);
+  let value = _value;
   for (let predicate of predicates) {
+    console.log("new value", value);
     try {
-      predicate(value, key);
+      value = predicate(value, key);
     } catch (e) {
       /** @type {CustomError} */
       let err = e instanceof Error ? e : Error(String(e));
@@ -45,11 +46,12 @@ const validator = (predicates, decorateError) => (value, key) => {
  * @param obj - Input obj
  * @param [opts] - Option to aggregateError
  * @type {<T extends Record<string, any>>(schema: Record<string, Predicate>) =>
- * (obj: T, opts?: typeof defaults.schemaOpts) => T | never}
+ * (_obj: T, opts?: typeof defaults.schemaOpts) => T | never}
  */
 const vSchema =
   (schema) =>
-  (obj, opts = defaults.schemaOpts) => {
+  (_obj, opts = defaults.schemaOpts) => {
+    let obj = _obj;
     let { aggregateError } = opts;
     let aggregateErrors = [];
     for (let [key, validator] of Object.entries(schema)) {
@@ -60,7 +62,8 @@ const vSchema =
       }
       let value = obj[key];
       try {
-        validator(value, key);
+        // @ts-ignore
+        obj[key] = validator(value, key);
       } catch (e) {
         if (aggregateError) {
           aggregateErrors.push(e);

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import tryCatch from "try-catch";
-import { string, defined, number } from "./predicates/string.js";
+import { string, defined, number, setDefault } from "./predicates/string.js";
 import { v, vSchema, composeValidators } from "./index.js";
 
 /** @typedef {import('./index.js').CustomError} CustomError*/
@@ -73,14 +73,16 @@ test("v(predicates[]: fn, decorateError?: fn)(value: any, key?: string) => any",
       assert.deepStrictEqual(error?.key, "customErrorKey");
     },
   );
-  await t.test.todo(
+  await t.test(
     "Given predicates, should carry forward the values returned from each predicates",
     () => {
       let concat =
         (str = "") =>
         (value = "") =>
           value + str;
-      //v([string, concat])
+
+      let value = v([string, concat("y"), string])("x");
+      assert.deepStrictEqual(value, "xy");
     },
   );
 });
@@ -226,10 +228,28 @@ test("vSchema(schema: object, opts: object, obj: object) => object", async (t) =
     },
   );
 
-  await t.test.todo(
+  await t.test(
     "Given schema with predicates modifying the values, should modify value in the obj",
     () => {
-      //let obj = { name: 'sandeep' }
+      let obj = { name: "sandeep" };
+      let schema1 = vSchema({
+        name: string,
+        age: v([setDefault(24), number]),
+      });
+      assert.deepStrictEqual(schema1(obj), {
+        name: "sandeep",
+        age: 24,
+      });
+      assert.deepStrictEqual(
+        schema1({
+          name: "sandeep",
+          age: 30,
+        }),
+        {
+          name: "sandeep",
+          age: 30,
+        },
+      );
     },
   );
 });
@@ -250,32 +270,36 @@ test("composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
       obj,
     );
   };
-  await t.test('Given {age: "24"} ; should throw Age TypeError ', () => {
-    let obj = {
-      name: "x",
-      age: "24",
-      address: "204, kumudham nagar",
-      offerDate: "04/01/2024",
-      joiningDate: "03/17/2024",
-    };
-    let objValidator = composeValidators([
-      vSchema({
-        name: v([string]),
-        age: v([number]),
-        "address?": v([string]),
-      }),
-      compareDates,
-      assignDefaults,
-    ]);
-    let [error] = tryCatch(objValidator, obj);
-    assert.deepStrictEqual(
-      error?.toString(),
-      "TypeError: Expected {age} to be number. Given {age: 24}",
-    );
-  });
+  await t.test(
+    "Given validators and invalid object, should throw Invalid error",
+    () => {
+      let obj = {
+        name: "x",
+        age: "24",
+        address: "204, kumudham nagar",
+        offerDate: "04/01/2024",
+        joiningDate: "03/17/2024",
+      };
+      let objValidator = composeValidators([
+        vSchema({
+          name: v([string]),
+          age: v([number]),
+          "address?": v([string]),
+        }),
+        compareDates,
+        assignDefaults,
+      ]);
+      let [error] = tryCatch(objValidator, obj);
+      assert.deepStrictEqual(
+        error?.toString(),
+        "TypeError: Expected {age} to be number. Given {age: 24}",
+      );
+    },
+  );
 
   await t.test(
-    "Given offerDate after joiningDate ; should throw compare Error ",
+    //"Given offerDate after joiningDate ; should throw compare Error ",
+    "Given predicate after schema, should be called with obj",
     () => {
       let obj = {
         name: "x",
@@ -301,7 +325,7 @@ test("composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
     },
   );
 
-  await t.test("Given defaults; should apply defaults", () => {
+  await t.test("Given function defaults, should apply defaults", () => {
     let obj = {
       name: "x",
       age: 24,
@@ -322,7 +346,7 @@ test("composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
   });
 
   await t.test(
-    "Given aggregateError:true; should aggregate all errors including vschema errors",
+    "Given aggregateError:true, should aggregate all errors including vschema errors",
     () => {
       let obj = {
         name: "x",
@@ -360,7 +384,7 @@ test("composeValidators(validators[]:fn, opts?:object, obj:object, onError?:fn);
   );
 
   await t.test(
-    "Given onError on composeValidator ; should pass error to onError and return",
+    "Given onError on composeValidator, should pass error to onError and return",
     () => {
       let obj = {
         name: "x",

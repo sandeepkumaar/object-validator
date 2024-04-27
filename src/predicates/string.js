@@ -27,4 +27,9 @@ const number = function (value, key = KEY) {
   throw TypeError(`Expected {${key}} to be number. Given {${key}: ${value}}`);
 };
 
-export { string, defined, number };
+/** @type {(def: any) => (value: any) => def | value} */
+const setDefault = (def) => (value) => {
+  return value === undefined ? def : value;
+};
+
+export { string, defined, number, setDefault };

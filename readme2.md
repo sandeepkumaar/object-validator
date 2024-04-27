@@ -10,8 +10,8 @@
 
 
 ## Todo
-- review tests
-- default values in schema
+- review tests  - done
+- default values in schema - done
 - commonjs build
 - predicates
 - change v to pipe
