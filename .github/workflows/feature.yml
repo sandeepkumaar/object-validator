@@ -1,4 +1,4 @@
-name: feature
+name: feature-ci
 
 on: 
   push: 

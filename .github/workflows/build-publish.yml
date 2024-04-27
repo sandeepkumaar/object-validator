@@ -1,9 +1,9 @@
-name: lint and unit test
+name: build and publish
 
 on: workflow_call
 
 jobs: 
-  test: 
+  build: 
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v4
@@ -11,8 +11,10 @@ jobs:
         with: 
           node-version: 20
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
+      - uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_AUTH_TOKEN }}
+          dry-run: true
          
     
   
