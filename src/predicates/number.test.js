@@ -10,11 +10,11 @@ test("number", async (t) => {
     let [error2] = tryCatch(number, "x", "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {input} to be a number. Given {input: x}",
+      "TypeError: Expected {input} to be number. Given {input: x}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
-      "TypeError: Expected {custom} to be a number. Given {custom: x}",
+      "TypeError: Expected {custom} to be number. Given {custom: x}",
     );
   });
   await t.test("pass", () => {
@@ -29,11 +29,11 @@ test("minNumber", async (t) => {
     let [error3] = tryCatch(minNumber(18), 12, "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {minNumber} to be a number. Given {minNumber: 18}",
+      "TypeError: Expected {minNumber} to be number. Given {minNumber: 18}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
-      "TypeError: Expected {input} to be a number. Given {input: 12}",
+      "TypeError: Expected {input} to be number. Given {input: 12}",
     );
     assert.deepStrictEqual(
       error3?.toString(),
@@ -52,7 +52,7 @@ test("maxNumber", async (t) => {
     let [error3] = tryCatch(maxNumber(12), 18, "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {maxNumber} to be a number. Given {maxNumber: 12}",
+      "TypeError: Expected {maxNumber} to be number. Given {maxNumber: 12}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
@@ -67,78 +67,3 @@ test("maxNumber", async (t) => {
     assert.deepStrictEqual(maxNumber(120)(100), 100);
   });
 });
-
-/*
-describe("minNumber", async function(assert) {
-  // test for pure, identity function
-  assertComposability(minNumber(18), {key: "age", value: 24 }, assert);
-
-  { // type check
-    let pair = { key: "age", value: false };
-    assert({
-      given: "pair value=boolean", 
-      should: "throw type err expecting number",
-      actual: Try(number, pair).toString(),
-      expected: "TypeError: Expected {age} to be of type number. Given {age: false}"
-    })
-  }
-
-  { // min number check: fail
-    let pair = {key: "age", value: 24}
-    assert({
-      given: "pair value=24 for minNumber(28)",
-      should: "throw err expecting minValue=28",
-      actual: Try(minNumber(28), pair).toString(),
-      expected: 'TypeError: Expected {age} to be greater than or equal to 28. Given {age: 24}'
-    })
-  }
-
-  { // min number check: pass
-    let pair = {key: "age", value: 24}
-    assert({
-      given: "pair value=24 for minNumber(24)",
-      should: "return pair",
-      actual: minNumber(24)(pair),
-      expected: pair
-    })
-  }
-
-});
-
-
-describe("maxNumber", async function(assert) {
-  // test for pure, identity function
-  assertComposability(maxNumber(30), {key: "age", value: 24 }, assert);
-
-  { // type check
-    let pair = { key: "age", value: "x" };
-    assert({
-      given: "pair value=string", 
-      should: "throw type err expecting number",
-      actual: Try(number, pair).toString(),
-      expected: "TypeError: Expected {age} to be of type number. Given {age: x}"
-    })
-  }
-
-  { // max number check: fail
-    let pair = {key: "age", value: 34}
-    assert({
-      given: "pair value=34 for maxNumber(28)",
-      should: "throw err expecting maxValue=28",
-      actual: Try(maxNumber(28), pair).toString(),
-      expected: 'TypeError: Expected {age} to be less than or equal to 28. Given {age: 34}'
-    })
-  }
-
-  { // max number check: pass
-    let pair = {key: "age", value: 18}
-    assert({
-      given: "pair value=18 for maxNumber(24)",
-      should: "return pair",
-      actual: maxNumber(24)(pair),
-      expected: pair
-    })
-  }
-
-});
-*/

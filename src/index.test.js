@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import tryCatch from "try-catch";
-import { string, defined, number, setDefault } from "./predicates/string.js";
+import { string, defined, number, setDefault } from "./predicates/index.js";
 import { v, vSchema, composeValidators } from "./index.js";
 
 /** @typedef {import('./index.js').CustomError} CustomError*/

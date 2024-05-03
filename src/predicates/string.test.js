@@ -10,11 +10,11 @@ test("string", async (t) => {
     let [error2] = tryCatch(string, false, "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {input} to be a string. Given {input: 0}",
+      "TypeError: Expected {input} to be string. Given {input: 0}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
-      "TypeError: Expected {custom} to be a string. Given {custom: false}",
+      "TypeError: Expected {custom} to be string. Given {custom: false}",
     );
   });
   await t.test("pass", () => {
@@ -29,11 +29,11 @@ test("minString", async (t) => {
     let [error3] = tryCatch(minString(4), "fal", "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {minString} to be a number. Given {minString: 0}",
+      "TypeError: Expected {minString} to be number. Given {minString: 0}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
-      "TypeError: Expected {custom} to be a string. Given {custom: false}",
+      "TypeError: Expected {custom} to be string. Given {custom: false}",
     );
     assert.deepStrictEqual(
       error3?.toString(),
@@ -52,11 +52,11 @@ test("maxString", async (t) => {
     let [error3] = tryCatch(maxString(4), "false", "custom");
     assert.deepStrictEqual(
       error1?.toString(),
-      "TypeError: Expected {maxString} to be a number. Given {maxString: 0}",
+      "TypeError: Expected {maxString} to be number. Given {maxString: 0}",
     );
     assert.deepStrictEqual(
       error2?.toString(),
-      "TypeError: Expected {custom} to be a string. Given {custom: false}",
+      "TypeError: Expected {custom} to be string. Given {custom: false}",
     );
     assert.deepStrictEqual(
       error3?.toString(),

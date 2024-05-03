@@ -14,7 +14,7 @@ let number = (value, key = KEY) => {
   let expected = "number";
   if (typeof value === "number") return value;
   throw TypeError(
-    `Expected {${key}} to be a ${expected}. Given {${key}: ${value}}`,
+    `Expected {${key}} to be ${expected}. Given {${key}: ${value}}`,
   );
 };
 
