@@ -1,4 +1,27 @@
-import { isOptional, removeOptionalMark, defaults } from "./utils.js";
+import { isOptional, removeOptionalMark } from "./utils.js";
+/**
+ * @typedef {(arg0: any, key?: string) => any | never} Predicate
+ *
+ * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
+ *
+ * @typedef {{
+ *  aggegateError?: boolean,
+ *  strict?: boolean,
+ *  handleError?: function
+ *  pipeline?: function[]
+ * }} ValidatorOpts
+ *
+ * @typedef {{
+ *  strict?: boolean,
+ *  aggregateError?: boolean
+ * }} SchemaOpts
+ *
+ * @typedef {{ errCb?: function}} ValidateOpts
+ *
+ * @typedef {Array<Predicate | ValidateOpts>} PredicateArray
+ * @typedef {Record<string, any>} Object
+ * @typedef {Record<string, PredicateArray>} Schema
+ */
 
 const strictKeyMatch = function (o1 = {}, o2 = {}) {
   let setO2 = new Set(Object.keys(o2));
@@ -10,10 +33,12 @@ const strictKeyMatch = function (o1 = {}, o2 = {}) {
 
 /**
  * predicates can be single predicate, arrary of predicates, predicates with obj
+ * @type {(_predicates: PredicateArray, value: any, key?: string) => any}
  */
-function validate(_predicates, value, key) {
+const validate = function validate(_predicates, value, key) {
   // handle different predicates scenarios
   let predicates = _predicates;
+  /** @type {ValidateOpts} */
   let opts = {};
   let isArray = Array.isArray(predicates);
   let singlePred = typeof predicates === "function";
@@ -21,18 +46,22 @@ function validate(_predicates, value, key) {
   if (!(isArray || singlePred))
     throw Error("Predicates should be an array or single predicate fn");
 
-  if (singlePred) predicates = [predicates];
+  if (singlePred) predicates = /** @type {PredicateArray} */ ([predicates]);
   // TODO: check predicates length before pop
 
-  let { errCb } =
+  let { errCb } = /** @type {ValidateOpts} */ (
     predicates.length && typeof predicates.at(-1) == "object"
       ? predicates.pop()
-      : opts;
+      : opts
+  );
 
   if (!predicates.length) throw Error("No predicates provided");
 
+  if (!predicates.every((predicate) => typeof predicate == "function"))
+    throw Error("Predicates should be a function");
+
   //console.log('predicate', predicates, value, key, errCb);
-  for (let predicate of predicates) {
+  for (let predicate of /** @type {Predicate[]}*/ (predicates)) {
     try {
       value = predicate(value, key);
     } catch (e) {
@@ -48,11 +77,14 @@ function validate(_predicates, value, key) {
     }
   }
   return value;
-}
-
+};
+/**
+ * @type {(obj: Record<string, any>, schema: Record<string, PredicateArray>, opts?: SchemaOpts) => Record<string, any>}
+ */
 function schemaValidator(obj, schema, opts = {}) {
+  /** @type {Record<string, any>} */
   let newObj = {};
-  let { aggregateError = false, errCb, strict = true, pipe } = opts;
+  let { aggregateError = false, strict = true } = opts;
   let aggregateErrors = [];
 
   // get schema entries
@@ -95,13 +127,21 @@ function schemaValidator(obj, schema, opts = {}) {
   return newObj;
 }
 
+/** @type {(fns: function[]) => (input: any) => any | never } */
 const pipe = (fns) => (input) => {
   return fns.reduce((acc, fn) => fn(acc), input);
 };
 
+/**
+ * @type {(obj: Object, schema: Schema , opts: ValidatorOpts)  => Object}
+ */
 function validator(obj, schema, opts = {}) {
   let { handleError, pipeline = [], ...restOpts } = opts;
-  let validators = [(o) => schemaValidator(o, schema, opts), ...pipeline];
+  let validators = [
+    /** @param {any}  o*/
+    (o) => schemaValidator(o, schema, restOpts),
+    ...pipeline,
+  ];
   try {
     //obj = _validator(obj, schema, restOpts);
     return pipe(validators)(obj);
