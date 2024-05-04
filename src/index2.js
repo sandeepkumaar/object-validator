@@ -23,12 +23,18 @@ import { isOptional, removeOptionalMark } from "./utils.js";
  * @typedef {Record<string, PredicateArray>} Schema
  */
 
-const strictKeyMatch = function (o1 = {}, o2 = {}) {
+const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
+  console.log(o1, o2, strict);
   let setO2 = new Set(Object.keys(o2));
   let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
-  if (additionalKeys.length)
-    throw TypeError(`UnExpected keys [${additionalKeys}]`);
-  return o2;
+  if (strict && additionalKeys.length)
+    throw TypeError(`Unexpected keys [${additionalKeys}]`);
+  // @ts-ignore
+  let additionalObj = Object.fromEntries(
+    additionalKeys.map((key) => [key, o1[key]]),
+  );
+  //console.log(o1, o2, strict, additionalKeys, additionalObj);
+  return { ...o2, ...additionalObj };
 };
 
 /**
@@ -108,15 +114,13 @@ function schemaValidator(obj, schema, opts = {}) {
     }
   }
   // strict key match check
-  if (strict) {
-    try {
-      strictKeyMatch(obj, newObj);
-    } catch (e) {
-      if (aggregateError) {
-        aggregateErrors.push(e);
-      } else {
-        throw e;
-      }
+  try {
+    newObj = strictKeyMatch(obj, newObj, strict);
+  } catch (e) {
+    if (aggregateError) {
+      aggregateErrors.push(e);
+    } else {
+      throw e;
     }
   }
 

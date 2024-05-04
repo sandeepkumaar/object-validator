@@ -272,6 +272,24 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       );
     },
   );
+  await t.test(
+    "Given schema and object, strict check, should throw error by default, skip when strict=false",
+    () => {
+      let obj = { name: "sandeep", abc: "null" };
+      let schema = {
+        name: string,
+      };
+      let [error1] = tryCatch(schemaValidator, obj, schema);
+      assert.deepStrictEqual(
+        error1?.toString(),
+        "TypeError: Unexpected keys [abc]",
+      );
+      let [, result] = tryCatch(schemaValidator, obj, schema, {
+        strict: false,
+      });
+      assert.deepStrictEqual(result, obj);
+    },
+  );
 });
 
 test("validators(obj:object, schema: object, opts?:object);", async (t) => {
