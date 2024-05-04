@@ -29,8 +29,8 @@ const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
   let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
   if (strict && additionalKeys.length)
     throw TypeError(`Unexpected keys [${additionalKeys}]`);
-  // @ts-ignore
   let additionalObj = Object.fromEntries(
+    // @ts-ignore
     additionalKeys.map((key) => [key, o1[key]]),
   );
   //console.log(o1, o2, strict, additionalKeys, additionalObj);

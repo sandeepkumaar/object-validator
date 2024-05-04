@@ -15,10 +15,14 @@ const setDefault = (def) => (value) => {
   return value || def;
 };
 
-const hasKeys = (keys) => (obj) => {
-  let missingKeys = keys.filter((key) => prop in obj);
-  if (missingKeys.length)
-    throw TypeError(`Expected properties ${missingKeys} on the input object`);
-};
+/** @type {(keys: string[], obj: object) => typeof obj | never}*/
+const hasKeys =
+  (keys = []) =>
+  (obj = {}) => {
+    let missingKeys = keys.filter((key = "") => key in obj);
+    if (missingKeys.length)
+      throw TypeError(`Expected properties ${missingKeys} on the input object`);
+    return obj;
+  };
 
 export { defined, setDefault, hasKeys };
