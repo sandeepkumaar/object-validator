@@ -1,150 +1,158 @@
-import { isOptional, removeOptionalMark, defaults } from "./utils.js";
+import { isOptional, removeOptionalMark } from "./utils.js";
 /**
- * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
- * @typedef {(err: Error) => Error} ThrowableFunction
  * @typedef {(arg0: any, key?: string) => any | never} Predicate
+ *
+ * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
+ *
+ * @typedef {{
+ *  aggegateError?: boolean,
+ *  strict?: boolean,
+ *  handleError?: function
+ *  pipeline?: function[]
+ * }} ValidatorOpts
+ *
+ * @typedef {{
+ *  strict?: boolean,
+ *  aggregateError?: boolean
+ * }} SchemaOpts
+ *
+ * @typedef {{ errCb?: function}} ValidateOpts
+ *
+ * @typedef {Array<Predicate | ValidateOpts>} PredicateArray
+ * @typedef {Record<string, any>} Object
+ * @typedef {Record<string, PredicateArray>} Schema
  */
 
+const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
+  console.log(o1, o2, strict);
+  let setO2 = new Set(Object.keys(o2));
+  let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
+  if (strict && additionalKeys.length)
+    throw TypeError(`Unexpected keys [${additionalKeys}]`);
+  // @ts-ignore
+  let additionalObj = Object.fromEntries(
+    additionalKeys.map((key) => [key, o1[key]]),
+  );
+  //console.log(o1, o2, strict, additionalKeys, additionalObj);
+  return { ...o2, ...additionalObj };
+};
+
 /**
- * Core validator throws on validation failure or returns the value on success
- * @param predicates - Array of predicates where value is passed against
- * @param [decorateError] - Optional Error handler to add/simplify error info. it always throws whats returned
- * @param value - value to validate
- * @param [key] - Optional key supplied by composeValidator for objects
- *
- * @type {(predicates: Predicate[], decorateError?: ThrowableFunction) => Predicate}
+ * predicates can be single predicate, arrary of predicates, predicates with obj
+ * @type {(_predicates: PredicateArray, value: any, key?: string) => any}
  */
-const validator = (predicates, decorateError) => (_value, key) => {
-  //console.log('input', predicates, decorateError, value, key);
-  let value = _value;
-  for (let predicate of predicates) {
+const validate = function validate(_predicates, value, key) {
+  // handle different predicates scenarios
+  let predicates = _predicates;
+  /** @type {ValidateOpts} */
+  let opts = {};
+  let isArray = Array.isArray(predicates);
+  let singlePred = typeof predicates === "function";
+
+  if (!(isArray || singlePred))
+    throw Error("Predicates should be an array or single predicate fn");
+
+  if (singlePred) predicates = /** @type {PredicateArray} */ ([predicates]);
+  // TODO: check predicates length before pop
+
+  let { errCb } = /** @type {ValidateOpts} */ (
+    predicates.length && typeof predicates.at(-1) == "object"
+      ? predicates.pop()
+      : opts
+  );
+
+  if (!predicates.length) throw Error("No predicates provided");
+
+  if (!predicates.every((predicate) => typeof predicate == "function"))
+    throw Error("Predicates should be a function");
+
+  //console.log('predicate', predicates, value, key, errCb);
+  for (let predicate of /** @type {Predicate[]}*/ (predicates)) {
     try {
       value = predicate(value, key);
     } catch (e) {
       /** @type {CustomError} */
       let err = e instanceof Error ? e : Error(String(e));
-      // replace 'input' with custom key provided
-      err.message =
-        key && err.message.includes(defaults.KEY)
-          ? err.message.replaceAll(defaults.KEY, key)
-          : err.message;
       err.key = key; // will be undefined when no key provided
       err.value = value;
       err.predicate = predicate.name;
-      if (decorateError) {
-        err = decorateError(err);
+      if (errCb) {
+        err = errCb(err);
       }
       throw err;
     }
   }
   return value;
 };
-
-const strictKeyMatch = function (o1 = {}, o2 = {}) {
-  let setO2 = new Set(Object.keys(o2));
-  let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
-  if (additionalKeys.length)
-    throw TypeError(`UnExpected keys [${additionalKeys}]`);
-  return o2;
-};
-
 /**
- * New object is returned. keys are
- * @param schema - schema object used to declare the validators
- * @param obj - Input obj
- * @param [opts] - Option to aggregateError
- * @type {(schema: Record<string, Predicate>) =>
- * (obj: Record<string, any>, opts?: typeof defaults.schemaOpts) => Record<string, any> | never}
+ * @type {(obj: Record<string, any>, schema: Record<string, PredicateArray>, opts?: SchemaOpts) => Record<string, any>}
  */
-const vSchema =
-  (schema) =>
-  (obj, opts = defaults.schemaOpts) => {
-    let newObj = {};
-    let { aggregateError = false, strict = true } = opts;
-    let aggregateErrors = [];
+function schemaValidator(obj, schema, opts = {}) {
+  /** @type {Record<string, any>} */
+  let newObj = {};
+  let { aggregateError = false, strict = true } = opts;
+  let aggregateErrors = [];
 
-    for (let [key, validator] of Object.entries(schema)) {
-      // handle Optional keys - remove'?' and skip check if undefined
-      if (isOptional(key)) {
-        key = removeOptionalMark(key);
-        if (obj[key] === undefined) continue;
-      }
-      let value = obj[key];
-      try {
+  // get schema entries
+  for (let [key, predicates] of Object.entries(schema)) {
+    // handle Optional keys - remove'?' and skip check if undefined
+    if (isOptional(key)) {
+      key = removeOptionalMark(key);
+      if (obj[key] === undefined) continue;
+    }
+    let value = obj[key];
+    try {
+      newObj[key] = validate(predicates, value, key);
+    } catch (e) {
+      if (aggregateError) {
         // @ts-ignore
-        newObj[key] = validator(value, key);
-      } catch (e) {
-        if (aggregateError) {
-          // @ts-ignore
-          newObj[key] = value; // for strictKey check when aggregateError is true
-          aggregateErrors.push(e);
-          continue;
-        }
-        throw e;
+        newObj[key] = value; // for strictKey check when aggregateError is true
+        aggregateErrors.push(e);
+        continue;
       }
-    }
-    // strict key match check
-    if (strict) {
-      try {
-        strictKeyMatch(obj, newObj);
-      } catch (e) {
-        if (aggregateError) {
-          aggregateErrors.push(e);
-        } else {
-          throw e;
-        }
-      }
-    }
-    if (aggregateErrors.length) {
-      let e = new AggregateError(aggregateErrors, "vSchema Errors");
       throw e;
     }
-    return newObj;
-  };
+  }
+  // strict key match check
+  try {
+    newObj = strictKeyMatch(obj, newObj, strict);
+  } catch (e) {
+    if (aggregateError) {
+      aggregateErrors.push(e);
+    } else {
+      throw e;
+    }
+  }
+
+  if (aggregateErrors.length) {
+    let e = new AggregateError(aggregateErrors, "schemaValidator Errors");
+    throw e;
+  }
+  return newObj;
+}
+
+/** @type {(fns: function[]) => (input: any) => any | never } */
+const pipe = (fns) => (input) => {
+  return fns.reduce((acc, fn) => fn(acc), input);
+};
 
 /**
- * @typedef {<T extends Record<string, any>>(obj: T, opts?: typeof defaults.schemaOpts) => T | never} Validator
- * @type {<T extends object>(...validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never}
+ * @type {(obj: Object, schema: Schema , opts: ValidatorOpts)  => Object}
  */
-const composeValidators =
-  (...validators) =>
-  (_obj, opts = defaults.composeOpts) => {
-    // check inputs
-    let obj = _obj;
-    let { aggregateError = false, onError } = opts;
-    /** @type AggregateError[]*/
-    let aggregateErrors = [];
-    for (let validator of validators) {
-      try {
-        obj = validator(obj, { aggregateError });
-      } catch (e) {
-        if (aggregateError) {
-          aggregateErrors =
-            e instanceof AggregateError
-              ? [...aggregateErrors, ...e.errors]
-              : [...aggregateErrors, e];
+function validator(obj, schema, opts = {}) {
+  let { handleError, pipeline = [], ...restOpts } = opts;
+  let validators = [
+    /** @param {any}  o*/
+    (o) => schemaValidator(o, schema, restOpts),
+    ...pipeline,
+  ];
+  try {
+    //obj = _validator(obj, schema, restOpts);
+    return pipe(validators)(obj);
+  } catch (e) {
+    if (handleError) return handleError(e);
+    throw e;
+  }
+}
 
-          continue;
-        }
-        if (onError) {
-          return onError(e);
-        }
-        throw e;
-      }
-    }
-    if (aggregateErrors.length) {
-      let e = new AggregateError(aggregateErrors, "composeValidator Errors");
-
-      if (onError) {
-        return onError(e);
-      }
-      throw e;
-    }
-    return obj;
-  };
-
-export {
-  validator as v, // this for is for single argument validator
-  vSchema, // rename this to vObject
-  composeValidators,
-};
+export { validate, schemaValidator, validator };
