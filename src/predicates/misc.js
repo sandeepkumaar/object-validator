@@ -15,4 +15,10 @@ const setDefault = (def) => (value) => {
   return value || def;
 };
 
-export { defined, setDefault };
+const hasKeys = (keys) => (obj) => {
+  let missingKeys = keys.filter((key) => prop in obj);
+  if (missingKeys.length)
+    throw TypeError(`Expected properties ${missingKeys} on the input object`);
+};
+
+export { defined, setDefault, hasKeys };

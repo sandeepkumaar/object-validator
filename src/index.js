@@ -18,7 +18,6 @@ const validator = (predicates, decorateError) => (_value, key) => {
   //console.log('input', predicates, decorateError, value, key);
   let value = _value;
   for (let predicate of predicates) {
-    console.log("new value", value);
     try {
       value = predicate(value, key);
     } catch (e) {
@@ -41,19 +40,29 @@ const validator = (predicates, decorateError) => (_value, key) => {
   return value;
 };
 
+const strictKeyMatch = function (o1 = {}, o2 = {}) {
+  let setO2 = new Set(Object.keys(o2));
+  let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
+  if (additionalKeys.length)
+    throw TypeError(`UnExpected keys [${additionalKeys}]`);
+  return o2;
+};
+
 /**
+ * New object is returned. keys are
  * @param schema - schema object used to declare the validators
  * @param obj - Input obj
  * @param [opts] - Option to aggregateError
- * @type {<T extends Record<string, any>>(schema: Record<string, Predicate>) =>
- * (_obj: T, opts?: typeof defaults.schemaOpts) => T | never}
+ * @type {(schema: Record<string, Predicate>) =>
+ * (obj: Record<string, any>, opts?: typeof defaults.schemaOpts) => Record<string, any> | never}
  */
 const vSchema =
   (schema) =>
-  (_obj, opts = defaults.schemaOpts) => {
-    let obj = _obj;
-    let { aggregateError } = opts;
+  (obj, opts = defaults.schemaOpts) => {
+    let newObj = {};
+    let { aggregateError = false, strict = true } = opts;
     let aggregateErrors = [];
+
     for (let [key, validator] of Object.entries(schema)) {
       // handle Optional keys - remove'?' and skip check if undefined
       if (isOptional(key)) {
@@ -63,31 +72,46 @@ const vSchema =
       let value = obj[key];
       try {
         // @ts-ignore
-        obj[key] = validator(value, key);
+        newObj[key] = validator(value, key);
       } catch (e) {
         if (aggregateError) {
+          // @ts-ignore
+          newObj[key] = value; // for strictKey check when aggregateError is true
           aggregateErrors.push(e);
           continue;
         }
         throw e;
       }
     }
-    if (aggregateErrors.length) {
-      throw new AggregateError(aggregateErrors, "vSchema Errors");
+    // strict key match check
+    if (strict) {
+      try {
+        strictKeyMatch(obj, newObj);
+      } catch (e) {
+        if (aggregateError) {
+          aggregateErrors.push(e);
+        } else {
+          throw e;
+        }
+      }
     }
-    return obj;
+    if (aggregateErrors.length) {
+      let e = new AggregateError(aggregateErrors, "vSchema Errors");
+      throw e;
+    }
+    return newObj;
   };
 
 /**
  * @typedef {<T extends Record<string, any>>(obj: T, opts?: typeof defaults.schemaOpts) => T | never} Validator
- * @type {<T extends object>(validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never}
+ * @type {<T extends object>(...validators: Validator[]) => (_obj: T, opts?: typeof defaults.composeOpts) => T | never}
  */
 const composeValidators =
-  (validators) =>
+  (...validators) =>
   (_obj, opts = defaults.composeOpts) => {
     // check inputs
     let obj = _obj;
-    let { aggregateError, onError } = opts;
+    let { aggregateError = false, onError } = opts;
     /** @type AggregateError[]*/
     let aggregateErrors = [];
     for (let validator of validators) {

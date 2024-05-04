@@ -1,8 +1,9 @@
 export const defaults = {
   KEY: "input",
-  /** @type {{aggregateError?: boolean}} */
+  /** @type {{aggregateError?: boolean, strict?: boolean}} */
   schemaOpts: {
     aggregateError: false,
+    strict: true,
   },
   /** @type {{aggregateError?: boolean, onError?: function}} */
   composeOpts: {

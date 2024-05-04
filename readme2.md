@@ -1,12 +1,37 @@
-## object-validator
+## object-validat
+Functional Object schema validator for objects, function arguments, UI form inputs, API request payload
+- Composable predicates
+- Customizable native errors
+- Simple error handling 
+- Integration with other validation libraries
+-  Zero dependencies, minimal footprint 
+
+## npm
+Install: `npm install @sknk/object-validator`  
+Test: `npm test`  
+Run examples: `npm run example`  
 
 
-### Just Native Errors
+## Basic usage
 
 
-### Everything is a predicate and can be piped
 
-### Customizable everywhere 
+## Pipe predicates
+
+
+### Customizable JS Errors
+
+
+
+### Simple Error handling
+
+### Extending with othe validation libraries
+
+
+
+
+## API 
+
 
 
 ## Todo
