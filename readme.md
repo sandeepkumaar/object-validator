@@ -1,4 +1,5 @@
-## object-validat
+## object-validator
+
 Functional Object schema validator for objects, function arguments, UI form inputs, API request payload.  
 Predicates are powered by `tiny-schema` package
 - Composable predicates
@@ -34,7 +35,7 @@ Throws error on validation failure. On success returns the object.
 
 ## Predicate & Tranform pipelines 
 Predicates can be *strings* from `tiny-schema` package. checkout out their readme for more predicates.     
-**Custom predicates** are also accepted. 
+**Custom predicates** are also supported. 
 ```
 function string(value, key='input') {
   if(typeof value === 'string') throw Error('Expecting string. Given ${key}: ${value}');
@@ -46,10 +47,11 @@ let schema = {
 };
 obj = validate(obj, schema);
 ```
+
 - key - optional, will be passed by the validator
 - predicate should return  or throw error 
 
-Transforms are similar to function predicates which can tranform values
+**Transforms** are similar to function predicates which can tranform values
 ```
 const setDefault = (def) => (value) => {
   return value || def;
@@ -62,7 +64,7 @@ let schema = {
 obj = validate({age: 24}, schema);
 ```
 
-schema key validation pipelines are simple standalone functions. **no depedency** with the package which makes it lean 
+schema key validation pipelines are simple standalone functions. **no dependency** with the package which makes it lean 
 and allows you to extend other validation libraries with custom errors.
 
 ## Schema pipeline opts - {errCb, opt}
@@ -134,12 +136,12 @@ let o = validator(obj, schema, {
   ]
 }
 })
+```
 Schema can only check individual fields. This pipeline opts will allows us to validate togther as an object.
 
 Note: 
 - Errors thrown from object pipeline are handled by `handleError`
 - other options like aggregateError, strict are only for schema validation
-```
 
 ## TODO
 - publish - commonjs

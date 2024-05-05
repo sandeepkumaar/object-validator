@@ -1,6 +1,6 @@
 {
   "name": "@sknk/object-validator",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "function argument and Schema validator, composable predicates, customizable errors, extends with external validation libraries - minimal footprint",
   "type": "module",
   "main": "src/index.js",
@@ -24,6 +24,9 @@
       "npm run format:fix",
       "git add ."
     ]
+  },
+  "dependencies": {
+    "tiny-schema": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
@@ -53,8 +56,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/sandeepkumaar/object-validator"
-  },
-  "dependencies": {
-    "tiny-schema": "^1.0.0"
   }
 }
