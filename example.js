@@ -8,10 +8,10 @@ import {
 
 let obj = {
   name: "sandeep",
-  age: 24,
-  abc: "a",
+  age: 25,
+  //abc: "a",
 };
-
+/*
 let schema = {
   name: [
     string,
@@ -42,4 +42,13 @@ try {
   console.log(value);
 } catch (e) {
   console.error(e);
-}
+};
+*/
+
+let simpleSchema = {
+  name: ["string", "/^.{3,8}$/"],
+  age: ["number", "18-24"],
+};
+
+let x = validator(obj, simpleSchema);
+console.log("simple", x);

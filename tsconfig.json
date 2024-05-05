@@ -12,6 +12,6 @@
     "noImplicitReturns": true
   },
   "include": ["index.js", "src/**/*.js"],
-  "exclude": ["src/**/*.test.js"] // uncomment this when writing test to check your types are correct
+  //"exclude": ["src/**/*.test.js"] // uncomment this when writing test to check your types are correct
 
 }

@@ -53,5 +53,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/sandeepkumaar/object-validator"
+  },
+  "dependencies": {
+    "tiny-schema": "^1.0.0"
   }
 }

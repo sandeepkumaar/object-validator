@@ -4,10 +4,10 @@ let assertComposability = (fn, arg, assert) => {
     given: "a pair obj",
     should: "return the same pair obj",
     actual: fn(arg),
-    expected: arg
-  })
+    expected: arg,
+  });
 };
 
 module.exports = {
-  assertComposability
-}
+  assertComposability,
+};

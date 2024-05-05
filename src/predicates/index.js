@@ -1,9 +1,6 @@
-export * from "./string.js";
-export * from "./number.js";
-export * from "./boolean.js";
-export * from "./date.js";
-export * from "./regex.js";
 export * from "./misc.js";
+export * from "./date.js";
+export * from "./tiny-schema-wrapper.js";
 
 /**
  * common type definition for all predicates to import

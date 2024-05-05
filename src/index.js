@@ -1,4 +1,8 @@
 import { isOptional, removeOptionalMark } from "./utils.js";
+import { is } from "./predicates/index.js";
+// @ts-ignore
+import check from "tiny-schema";
+
 /**
  * @typedef {(arg0: any, key?: string) => any | never} Predicate
  *
@@ -24,7 +28,6 @@ import { isOptional, removeOptionalMark } from "./utils.js";
  */
 
 const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
-  console.log(o1, o2, strict);
   let setO2 = new Set(Object.keys(o2));
   let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
   if (strict && additionalKeys.length)
@@ -33,7 +36,6 @@ const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
     // @ts-ignore
     additionalKeys.map((key) => [key, o1[key]]),
   );
-  //console.log(o1, o2, strict, additionalKeys, additionalObj);
   return { ...o2, ...additionalObj };
 };
 
@@ -47,7 +49,8 @@ const validate = function validate(_predicates, value, key) {
   /** @type {ValidateOpts} */
   let opts = {};
   let isArray = Array.isArray(predicates);
-  let singlePred = typeof predicates === "function";
+  let singlePred =
+    typeof predicates === "function" || typeof predicates === "string";
 
   if (!(isArray || singlePred))
     throw Error("Predicates should be an array or single predicate fn");
@@ -56,10 +59,16 @@ const validate = function validate(_predicates, value, key) {
   // TODO: check predicates length before pop
 
   let { errCb } = /** @type {ValidateOpts} */ (
-    predicates.length && typeof predicates.at(-1) == "object"
+    predicates.length && check("object")(predicates.at(-1))
       ? predicates.pop()
       : opts
   );
+
+  // map tiny-schema style scheme with wrapper
+  predicates = predicates.map((predicate) => {
+    if (typeof predicate === "string") return is(predicate);
+    return predicate;
+  });
 
   if (!predicates.length) throw Error("No predicates provided");
 
@@ -75,7 +84,7 @@ const validate = function validate(_predicates, value, key) {
       let err = e instanceof Error ? e : Error(String(e));
       err.key = key; // will be undefined when no key provided
       err.value = value;
-      err.predicate = predicate.name;
+      err.predicate = err.predicate || predicate.name;
       if (errCb) {
         err = errCb(err);
       }

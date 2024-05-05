@@ -38,5 +38,10 @@ Run examples: `npm run example`
 - review tests  - done
 - default values in schema - done
 - commonjs build
-- predicates
+- predicates -- publish as an optional import or  separate package 
+  - understand how it works
+  - use tiny-schema dependency (yes) 
+  - extend it with needed. (not required, use regex for string len)
+  - Have generic Errors, let users override errors with what they need.
+
 - change v to pipe

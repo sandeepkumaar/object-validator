@@ -1,13 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import tryCatch from "try-catch";
-import {
-  string,
-  defined,
-  number,
-  setDefault,
-  date,
-} from "./predicates/index.js";
+import { is, defined, setDefault, date } from "./predicates/index.js";
+const string = is("string");
+const number = is("number");
+
 import { validate, schemaValidator, validator } from "./index.js";
 
 /** @typedef {import('./index.js').CustomError} CustomError*/
@@ -40,7 +37,7 @@ test("validate(predicates[]: fn, value: any, key?: string) => any", async (t) =>
       let [error] = tryCatch(validate, [defined, string], 1);
       assert.deepStrictEqual(
         error.message,
-        "Expected {input} to be string. Given {input: 1}",
+        "Expected {input} to satisfy {string} validation. Given {input: 1}",
       );
       assert.deepStrictEqual(error.key, undefined);
     },
@@ -52,7 +49,7 @@ test("validate(predicates[]: fn, value: any, key?: string) => any", async (t) =>
       let [error] = tryCatch(validate, [defined, string], 1, "customKey");
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {customKey} to be string. Given {customKey: 1}",
+        "TypeError: Expected {customKey} to satisfy {string} validation. Given {customKey: 1}",
       );
       assert.deepStrictEqual(error.key, "customKey");
       assert.deepStrictEqual(error.value, 1);
@@ -101,6 +98,7 @@ test("validate(predicates[]: fn, value: any, key?: string) => any", async (t) =>
 });
 
 test("schemaValidator(obj: object, schema: object, opts: object) => object", async (t) => {
+  //t.runOnly(true);
   await t.test(
     //'Given schema:{name: string, age: number}, obj: {name: "x", age: 24} ; should return obj',
     "Given schema and valid object, should return the given object",
@@ -132,7 +130,7 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       let [error] = tryCatch(schemaValidator, obj, schema);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {age} to be number. Given {age: 24}",
+        "TypeError: Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
     },
   );
@@ -172,7 +170,7 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       let [error] = tryCatch(schemaValidator, obj, schema);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {address} to be string. Given {address: 4}",
+        "TypeError: Expected {address} to satisfy {string} validation. Given {address: 4}",
       );
     },
   );
@@ -200,17 +198,17 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       );
       assert.deepStrictEqual(
         error?.errors[0]?.toString(),
-        "TypeError: Expected {age} to be number. Given {age: 24}",
+        "TypeError: Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
       assert.deepStrictEqual(
         error?.errors[1]?.toString(),
-        "TypeError: Expected {address} to be string. Given {address: 4}",
+        "TypeError: Expected {address} to satisfy {string} validation. Given {address: 4}",
       );
     },
   );
 
   await t.test(
-    "Given schema with normal predicates, should have same validation behavior",
+    "Given schema with normal predicates, should have same validation satisfyhavior",
     () => {
       let obj = {
         name: "x",
@@ -225,7 +223,7 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       let [error] = tryCatch(schemaValidator, obj, schema);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {age} to be number. Given {age: 24}",
+        "TypeError: Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
       let [aggregateError] = tryCatch(schemaValidator, obj, schema, {
         aggregateError: true,
@@ -236,11 +234,11 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       );
       assert.deepStrictEqual(
         aggregateError?.errors[0]?.toString(),
-        "TypeError: Expected {age} to be number. Given {age: 24}",
+        "TypeError: Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
       assert.deepStrictEqual(
         aggregateError?.errors[1]?.toString(),
-        "TypeError: Expected {address} to be string. Given {address: 4}",
+        "TypeError: Expected {address} to satisfy {string} validation. Given {address: 4}",
       );
     },
   );
@@ -290,6 +288,29 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
       assert.deepStrictEqual(result, obj);
     },
   );
+
+  await t.test(
+    "Given tiny-schema strings, should validate with tiny-schema wrapper",
+    () => {
+      let obj = { name: "sandeep", abc: null };
+      let schema = {
+        name: ["string", "/^.{3-5$/"],
+        abc: "null",
+      };
+      let [error1] = tryCatch(schemaValidator, obj, schema, {
+        aggregateError: true,
+      });
+      assert.deepStrictEqual(
+        error1?.toString(),
+        "AggregateError: schemaValidator Errors",
+      );
+      assert.deepStrictEqual(error1?.errors.length, 1);
+      assert.deepStrictEqual(
+        error1?.errors[0]?.toString(),
+        "TypeError: Expected {name} to satisfy {/^.{3-5$/} validation. Given {name: sandeep}",
+      );
+    },
+  );
 });
 
 test("validators(obj:object, schema: object, opts?:object);", async (t) => {
@@ -297,7 +318,7 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
     let { offerDate, joiningDate } = obj;
     if (new Date(offerDate) < new Date(joiningDate)) return obj;
     throw TypeError(
-      `Expected offerDate to be before joiningDate. Given offerDate: ${offerDate}, joiningDate: ${joiningDate}`,
+      `Expected offerDate to satisfy before joiningDate. Given offerDate: ${offerDate}, joiningDate: ${joiningDate}`,
     );
   };
   let assignDefaults = (obj) => {
@@ -329,14 +350,14 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
       let [error] = tryCatch(validator, obj, schema, opts);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected {age} to be number. Given {age: 24}",
+        "TypeError: Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
     },
   );
 
   await t.test(
     //"Given offerDate after joiningDate ; should throw compare Error ",
-    "Given predicate after schema, should be called with obj",
+    "Given predicate after schema, should satisfy called with obj",
     () => {
       let obj = {
         name: "x",
@@ -358,7 +379,7 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
       let [error] = tryCatch(validator, obj, schema, opts);
       assert.deepStrictEqual(
         error?.toString(),
-        "TypeError: Expected offerDate to be before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024",
+        "TypeError: Expected offerDate to satisfy before joiningDate. Given offerDate: 04/01/2024, joiningDate: 03/17/2024",
       );
     },
   );
@@ -411,11 +432,11 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
       assert.deepStrictEqual(error.errors.length, 2);
       assert.deepStrictEqual(
         error.errors[0].message,
-        "Expected {age} to be number. Given {age: 24}",
+        "Expected {age} to satisfy {number} validation. Given {age: 24}",
       );
       assert.deepStrictEqual(
         error.errors[1].message,
-        "Expected {address} to be string. Given {address: 0}",
+        "Expected {address} to satisfy {string} validation. Given {address: 0}",
       );
     },
   );
@@ -441,7 +462,7 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
           handleError: (e) => {
             assert.deepStrictEqual(
               e.message,
-              "Expected {age} to be number. Given {age: 24}",
+              "Expected {age} to satisfy {number} validation. Given {age: 24}",
             );
             return false;
           },
