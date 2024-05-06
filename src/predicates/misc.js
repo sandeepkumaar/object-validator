@@ -25,10 +25,12 @@ const hasKeys =
     return obj;
   };
 
+/** @type {(keys: any[], obj: object) => object} */
 const pick =
   (keys = []) =>
   (obj = {}) => {
     return keys.reduce((acc, key) => {
+      // @ts-ignore
       acc[key] = obj[key];
       return acc;
     }, {});

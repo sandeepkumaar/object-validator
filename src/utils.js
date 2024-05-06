@@ -5,6 +5,7 @@ import { is } from "./predicates/tiny-schema-wrapper.js";
 /**
  * @typedef {import('./index.js').PredicateArray} PredicateArray
  * @typedef {import('./index.js').Predicate} Predicate
+ * @typedef {import('./index.js').ValidateOpts} ValidateOpts
  */
 
 export const defaults = {
@@ -27,10 +28,12 @@ export const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
   return { ...o2, ...additionalObj };
 };
 
-// @ts-ignore
-export const parsePredicates = function (_predicates = [], _key = "") {
-  let predicates = _predicates;
+/**
+ * @param {PredicateArray} predicates
+ */
+export const parsePredicates = function (predicates = [], _key = "") {
   let key = _key;
+  /** @type {ValidateOpts} */
   let opts = {
     /** @param {any} i*/
     errCb: (i) => i,
@@ -47,18 +50,26 @@ export const parsePredicates = function (_predicates = [], _key = "") {
     );
 
   // if function or string, convert it to predicate array
-  if (isFunction || isString) predicates = [predicates];
-  let lastElement = predicates.at(-1);
-  opts = check("object")(lastElement) ? predicates.pop() : opts;
+  /** @type {Array<Predicate | string | ValidateOpts>}*/
+  let predicatesArray = [];
+  if (isFunction || isString)
+    predicatesArray = /** @type {Array<Predicate | string | ValidateOpts>}*/ ([
+      predicates,
+    ]);
+  let lastElement = predicatesArray.at(-1);
+  opts = check("object")(lastElement)
+    ? /** @type{ValidateOpts} */ (predicatesArray.pop())
+    : opts;
 
-  if (!predicates.length) throw TypeError(`No predicates found for "${key}"`);
+  if (!predicatesArray.length)
+    throw TypeError(`No predicates found for "${key}"`);
   // map tiny-schema style scheme with wrapper
 
-  predicates = predicates.map((predicate) => {
-    if (check("string")(predicate)) return is(predicate);
+  predicatesArray = predicatesArray.map((predicate) => {
+    if (check("string")(predicate)) return is(/**@type{string} */ (predicate));
     return predicate;
   });
-  let invalidPredicates = predicates.filter(
+  let invalidPredicates = predicatesArray.filter(
     (predicate) => typeof predicate !== "function",
   );
   if (invalidPredicates.length)

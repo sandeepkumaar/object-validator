@@ -2,6 +2,9 @@ import { parsePredicates, strictKeyMatch } from "./utils.js";
 // @ts-ignore
 import check from "tiny-schema";
 
+/** @type {(i: any) => any} */
+const identity = (i) => i;
+
 /**
  * @typedef {(arg0: any, key?: string) => any | never} Predicate
  *
@@ -28,9 +31,9 @@ import check from "tiny-schema";
 
 /**
  * predicates can be single predicate, arrary of predicates, predicates with obj
- * @type {(_predicates: PredicateArray, value: any, key?: string, errCb?: (i:any) => any) => any}
+ * @type {(_predicates: PredicateArray, value: any, key?: string, errCb?: function) => any}
  */
-const validate = function validate(predicates, value, key, errCb = (i) => i) {
+const validate = function validate(predicates, value, key, errCb = identity) {
   for (let predicate of /** @type {Predicate[]}*/ (predicates)) {
     try {
       value = predicate(value, key);

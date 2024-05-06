@@ -13,7 +13,7 @@
     "lint": "npm run format:check && npm run lint:check && npm run type:check",
     "format:fix": "prettier --write --no-config 'src/**/*.js'",
     "format:check": "prettier --check --no-config 'src/**/*.js'",
-    "test": "node --test './src/index.test.js'",
+    "test": "node --test './test.js'",
     "prepare": "npm run type:emit",
     "setup": "husky",
     "pre-commit": "lint-staged",
