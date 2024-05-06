@@ -1,7 +1,7 @@
 ## object-validator
 
 Functional Object schema validator for objects, function arguments, UI form inputs, API request payload.  
-Predicates are powered by `tiny-schema` package
+Predicates are powered by [tiny-schema](https://www.npmjs.com/package/tiny-schema) package
 - Composable predicates
 - Customizable native errors
 - Simple error handling 
@@ -86,11 +86,47 @@ let schema = {
   )],
 };
 ```
+## Errors
+Errors thrown from validator are native Javascript Errors or whatever the error thrown by custom validator.   
+validator add additional properties like `key`, `value`, `predicate`  
+- key: object key on which validation is done
+- value: actual object key value
+- predicate: predicate function name used to perform validation
 
+> Note: Only Schema errors will be supplied with additional properties.
 
+TypeError
+```
+TypeError: Expected {age} to satisfy {18-24} validation. Given {age: 25}
+    at getError (file://tiny-schema-wrapper.js:6:11)
+    ...
+  predicate: '18-24',
+  key: 'age',
+  value: 25
+}
+```
+AggregateError
+```
+AggregateError: schemaValidator Errors
+    at schemaValidator (file://index.js:137:13)
+    ...
+  [errors]: [
+    TypeError: Expected {age} to satisfy {number} validation. Given {age: 25}
+        at getError (file://..tiny-schema-wrapper.js:6:11)
+        ...
+      predicate: 'number',
+      key: 'age',
+      value: '25'
+    },
+    TypeError: Unexpected keys [abc]
+        at strictKeyMatch (file:///home/sknk/sandeep/workspace/libraries/object-validator/src/index.js:34:11)
+        ...
+  ]
+}
+```
 
 ## API 
-### validator(obj: object, schema: object, opt?: object)
+### validator(obj: object, schema: object, opt?: object) => object | Error
 - obj - input object to validate
 - schema - object with predicates on each key
 - opt - Optional  { aggregareError=false, handleError: function, strict: true, pipeline: Predicate[]}

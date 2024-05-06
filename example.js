@@ -5,8 +5,8 @@ const number = is("number");
 
 let obj = {
   name: "sandeep",
-  age: 25,
-  //abc: "a",
+  age: "25",
+  abc: "a",
 };
 
 let simpleSchema = {
@@ -14,10 +14,11 @@ let simpleSchema = {
   age: ["number", "18-24"],
 };
 
-let x = validator(obj, simpleSchema);
+let x = validator(obj, simpleSchema, { aggregateError: true });
 console.log("simple", x);
 
 // complex
+
 const maxString = (max) => (str, key) => {
   if (str.length > max) throw TypeError(`given string exceeds. ${key}`);
   return str;

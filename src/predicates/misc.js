@@ -25,4 +25,13 @@ const hasKeys =
     return obj;
   };
 
-export { defined, setDefault, hasKeys };
+const pick =
+  (keys = []) =>
+  (obj = {}) => {
+    return keys.reduce((acc, key) => {
+      acc[key] = obj[key];
+      return acc;
+    }, {});
+  };
+
+export { defined, setDefault, hasKeys, pick };

@@ -1,5 +1,4 @@
-import { isOptional, removeOptionalMark } from "./utils.js";
-import { is } from "./predicates/index.js";
+import { parsePredicates, strictKeyMatch } from "./utils.js";
 // @ts-ignore
 import check from "tiny-schema";
 
@@ -20,62 +19,18 @@ import check from "tiny-schema";
  *  aggregateError?: boolean
  * }} SchemaOpts
  *
- * @typedef {{ errCb?: function}} ValidateOpts
+ * @typedef {{ errCb?: function, optKey?: boolean}} ValidateOpts
  *
- * @typedef {Array<Predicate | ValidateOpts>} PredicateArray
+ * @typedef {Array<Predicate | string | ValidateOpts> | string | function} PredicateArray
  * @typedef {Record<string, any>} Object
  * @typedef {Record<string, PredicateArray>} Schema
  */
 
-const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
-  let setO2 = new Set(Object.keys(o2));
-  let additionalKeys = Object.keys(o1).filter((k) => !setO2.has(k));
-  if (strict && additionalKeys.length)
-    throw TypeError(`Unexpected keys [${additionalKeys}]`);
-  let additionalObj = Object.fromEntries(
-    // @ts-ignore
-    additionalKeys.map((key) => [key, o1[key]]),
-  );
-  return { ...o2, ...additionalObj };
-};
-
 /**
  * predicates can be single predicate, arrary of predicates, predicates with obj
- * @type {(_predicates: PredicateArray, value: any, key?: string) => any}
+ * @type {(_predicates: PredicateArray, value: any, key?: string, errCb?: (i:any) => any) => any}
  */
-const validate = function validate(_predicates, value, key) {
-  // handle different predicates scenarios
-  let predicates = _predicates;
-  /** @type {ValidateOpts} */
-  let opts = {};
-  let isArray = Array.isArray(predicates);
-  let singlePred =
-    typeof predicates === "function" || typeof predicates === "string";
-
-  if (!(isArray || singlePred))
-    throw Error("Predicates should be an array or single predicate fn");
-
-  if (singlePred) predicates = /** @type {PredicateArray} */ ([predicates]);
-  // TODO: check predicates length before pop
-
-  let { errCb } = /** @type {ValidateOpts} */ (
-    predicates.length && check("object")(predicates.at(-1))
-      ? predicates.pop()
-      : opts
-  );
-
-  // map tiny-schema style scheme with wrapper
-  predicates = predicates.map((predicate) => {
-    if (typeof predicate === "string") return is(predicate);
-    return predicate;
-  });
-
-  if (!predicates.length) throw Error("No predicates provided");
-
-  if (!predicates.every((predicate) => typeof predicate == "function"))
-    throw Error("Predicates should be a function");
-
-  //console.log('predicate', predicates, value, key, errCb);
+const validate = function validate(predicates, value, key, errCb = (i) => i) {
   for (let predicate of /** @type {Predicate[]}*/ (predicates)) {
     try {
       value = predicate(value, key);
@@ -85,14 +40,13 @@ const validate = function validate(_predicates, value, key) {
       err.key = key; // will be undefined when no key provided
       err.value = value;
       err.predicate = err.predicate || predicate.name;
-      if (errCb) {
-        err = errCb(err);
-      }
+      err = errCb(err);
       throw err;
     }
   }
   return value;
 };
+
 /**
  * @type {(obj: Record<string, any>, schema: Record<string, PredicateArray>, opts?: SchemaOpts) => Record<string, any>}
  */
@@ -103,15 +57,16 @@ function schemaValidator(obj, schema, opts = {}) {
   let aggregateErrors = [];
 
   // get schema entries
-  for (let [key, predicates] of Object.entries(schema)) {
+  for (let [_key, _predicates] of Object.entries(schema)) {
+    let { predicates, key, opts } = parsePredicates(_predicates, _key);
+    let { errCb, optKey = false } = opts;
+
     // handle Optional keys - remove'?' and skip check if undefined
-    if (isOptional(key)) {
-      key = removeOptionalMark(key);
-      if (obj[key] === undefined) continue;
-    }
+    if (optKey && obj[key] === undefined) continue;
+
     let value = obj[key];
     try {
-      newObj[key] = validate(predicates, value, key);
+      newObj[key] = validate(predicates, value, key, errCb);
     } catch (e) {
       if (aggregateError) {
         // @ts-ignore
@@ -148,7 +103,11 @@ const pipe = (fns) => (input) => {
 /**
  * @type {(obj: Object, schema: Schema , opts: ValidatorOpts)  => Object}
  */
-function validator(obj, schema, opts = {}) {
+export default function validator(obj, schema, opts = {}) {
+  if (!check("object")(obj))
+    throw TypeError(`Expected input to be an object. Given ${obj}`);
+  if (!check("object")(schema))
+    throw TypeError(`Expected schema to be an object. Given ${schema}`);
   let { handleError, pipeline = [], ...restOpts } = opts;
   let validators = [
     /** @param {any}  o*/
@@ -164,4 +123,4 @@ function validator(obj, schema, opts = {}) {
   }
 }
 
-export { validate, schemaValidator, validator };
+export { validate, schemaValidator, pipe };

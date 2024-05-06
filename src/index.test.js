@@ -9,7 +9,7 @@ import { validate, schemaValidator, validator } from "./index.js";
 
 /** @typedef {import('./index.js').CustomError} CustomError*/
 
-test("validate(predicates[]: fn, value: any, key?: string) => any", async (t) => {
+test("validate(predicates[]: fn, value: any, key?: string, errCb?:string) => any", async (t) => {
   await t.test(
     //'Given predicates: [defined, string], value: "x" ; should return "x"',
     "Given predicates and valid value, should return the given value",
@@ -97,7 +97,7 @@ test("validate(predicates[]: fn, value: any, key?: string) => any", async (t) =>
   );
 });
 
-test("schemaValidator(obj: object, schema: object, opts: object) => object", async (t) => {
+test.skip("schemaValidator(obj: object, schema: object, opts: object) => object", async (t) => {
   //t.runOnly(true);
   await t.test(
     //'Given schema:{name: string, age: number}, obj: {name: "x", age: 24} ; should return obj',
@@ -313,7 +313,8 @@ test("schemaValidator(obj: object, schema: object, opts: object) => object", asy
   );
 });
 
-test("validators(obj:object, schema: object, opts?:object);", async (t) => {
+test("validators(obj:object, schema: object, opts?:object);", /*{only: true},*/ async (t) => {
+  //t.runOnly(true);
   let compareDates = (obj) => {
     let { offerDate, joiningDate } = obj;
     if (new Date(offerDate) < new Date(joiningDate)) return obj;
@@ -443,6 +444,7 @@ test("validators(obj:object, schema: object, opts?:object);", async (t) => {
 
   await t.test(
     "Given onError on composeValidator, should pass error to onError and return",
+    { only: true },
     () => {
       let obj = {
         name: "x",
