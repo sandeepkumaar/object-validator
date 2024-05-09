@@ -38,7 +38,10 @@ Throws error on validation failure. On success returns the object.
 
 
 ## Predicates & Transform pipelines 
-Predicates can be *strings* from `tiny-schema` package. checkout out their readme for more predicates.     
+```
+@typedef {Array<Predicate | string | ValidateOpts> | string | function} PredicateArray
+```
+Predicates can be a single|array of functions/predicates and single|array *strings* from `tiny-schema` package. checkout out their readme for more predicates.     
 **Custom predicates** are also supported. 
 ```
 function string(value, key='input') {
@@ -48,6 +51,8 @@ function string(value, key='input') {
 let schema = {
   name: [string, maxString(8)],
   age: ["number", "18-24"],
+  city: 'string', // single schema string
+  address: (i) => Error('') // single  predicate function.
 };
 obj = validate(obj, schema);
 ```
@@ -72,6 +77,10 @@ schema key validation pipelines are simple standalone functions. **no dependency
 and allows you to extend other validation libraries with custom errors.
 
 ## Schema pipeline opts - {errCb, opt}
+```
+@typedef {{ errCb?: (i: any) => any|never, optKey?: boolean}} ValidateOpts
+```
+
 - errCb : callback function that gets the error thrown by the validator from the pipeline. whatever errCb returns its thrown 
 again by the validator internally. use this to decorateError
 - opt: 2 ways to declare a key as *optional* key in schema
@@ -130,10 +139,17 @@ AggregateError: schemaValidator Errors
 ```
 
 ## API 
-### validator(obj: object, schema: object, opt?: object) => object | Error
-- obj - input object to validate
-- schema - object with predicates on each key
-- opt - Optional  { aggregareError=false, handleError: function, strict: true, pipeline: Predicate[]}
+### validator(obj: object, schema: Schema, opt?: object) => object | Error
+```
+ @typedef {Record<string, any>} Object
+ @typedef {Record<string, PredicateArray>} Schema
+```
+- obj: input object to validate
+- schema:  object with predicates on each key
+  - PredicateArray : Predicates can be a function, schema string, or array of predicates and string with optional 
+  - ValidateOpts: Optional
+
+- opt:  Optional  { aggregareError=false, handleError: function, strict: true, pipeline: Predicate[]}
 
 ###  Validator opts 
 #### aggreagateError

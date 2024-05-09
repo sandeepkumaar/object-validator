@@ -1,57 +1,40 @@
-import validator, { pipe } from "./src/index.js";
-import { is } from "./src/predicates/index.js";
-const string = is("string");
-const number = is("number");
+//import validator, {pipe, is, setDefault, date } from '@sknk/object-validator'
+import validator, { pipe, is, setDefault, date } from "./src/index.js";
 
-let obj = {
-  name: "sandeep",
-  age: "25",
-  abc: "a",
-};
+/* import predicates separately as well. */
+//import { is, setDefault, date }  from '@sknk/object-validator/predicates'
 
-let simpleSchema = {
-  name: ["string", "/^.{3,8}$/"],
-  age: ["number", "18-24"],
-};
-
-let x = validator(obj, simpleSchema, { aggregateError: true });
-console.log("simple", x);
-
-// complex
-
-const maxString = (max) => (str, key) => {
-  if (str.length > max) throw TypeError(`given string exceeds. ${key}`);
-  return str;
-};
-
-let schema = {
-  name: [
-    string,
-    maxString(5),
-    {
-      errCb: (e) => {
-        e.message = "custom message";
-        e.key = "customErrorKey";
-        return e;
-      },
-    },
-  ],
-  age: [number, "18-24"],
-  "city?": [string],
-};
-
-try {
-  let value = validator(obj, schema, {
-    aggregateError: true,
+let obj = validator(
+  {
+    name: "name",
+    age: 24,
+    dob: "09-14-1992",
+  },
+  {
+    name: "string",
+    age: [is("number"), "18-24"],
+    city: [setDefault("cbe"), "string", "/^.{3}$/"],
+    dob: [date],
+  },
+  {
+    aggregateError: false,
     strict: true,
-    handleError: (e) => false,
     pipeline: [
-      () => {
-        throw Error("dummy");
+      function addFields(o) {
+        return { ...o, x: "addfield" };
       },
     ],
-  });
-  console.log(value);
-} catch (e) {
-  console.error(e);
-}
+    handleError: (i) => i,
+  },
+);
+
+console.log(obj);
+/*
+ {
+   name: 'name',
+   age: 24,
+   city: 'cbe',
+   dob: '09-14-1992',
+   x: 'addfield'
+ }
+*/

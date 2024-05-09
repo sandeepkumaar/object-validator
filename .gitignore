@@ -4,3 +4,6 @@ dist
 #ignore generated types
 index.d.ts
 src/**/*d.ts
+
+#ignore pack zip
+*.tgz

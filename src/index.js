@@ -12,7 +12,7 @@ const identity = (i) => i;
  * @typedef {Error & {key?: string, value?: any, predicate?: string}} CustomError
  *
  * @typedef {{
- *  aggegateError?: boolean,
+ *  aggregateError?: boolean,
  *  strict?: boolean,
  *  handleError?: function
  *  pipeline?: function[]
@@ -105,7 +105,7 @@ export const pipe = (fns) => (input) => {
 };
 
 /**
- * @type {(obj: Object, schema: Schema , opts: ValidatorOpts)  => Object}
+ * @type {(obj: Object, schema: Schema , opts?: ValidatorOpts)  => Object}
  */
 export default function validator(obj, schema, opts = {}) {
   if (!check("object")(obj))
