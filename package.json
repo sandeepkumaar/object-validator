@@ -53,8 +53,7 @@
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "try-catch": "^3.0.1",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^7.7.0"
+    "typescript": "^5.3.3"
   },
   "author": "sandeepkumaar.c",
   "license": "ISC",
@@ -66,7 +65,7 @@
     "validator",
     "object-validator",
     "compose",
-    "zero dependencies"
+    "minimal footprint"
   ],
   "repository": {
     "type": "git",

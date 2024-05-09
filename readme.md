@@ -36,6 +36,36 @@ obj = validator(obj, schema)
 Throws error on validation failure. On success returns the object.
 
 
+## Validating function arguments
+You can also use this lib to validate the function arguments. Its done through a combination of `spread` operator and 
+`pipeArgs` utility to convert the arguments as objects for schema validation. 
+> Note : Since Array indexs are used as keys, when error is thrown, it throws with index as key. To have better error reporting
+> use `errCb` to customise the error. 
+```
+import validator, {pipeArgs} from '@sknk/object-validator';
+
+function add(a, b) {
+  return a + b;
+};
+
+function checkArgs(...args) {
+  let obj = Object.fromEntries(args.entries());
+  let schema = {
+    '0': ['+integer', '0-100'],
+    '1': ['+integer', '0-100'],
+    '2': ['object', {errCb: (e) => {
+      return  new TypeError('Invalid Optional argument');
+    }}]
+  };
+  obj = validator(obj, schema)
+  return Object.values(obj);
+};
+
+let strictAdd = pipeArgs(checkArgs, add);
+
+let ans = strictAdd(10, -2, {opts: false}) ;
+```
+Lot of the validation codes can be abstracted away from the actual implementation.
 
 ## Predicates & Transform pipelines 
 ```
@@ -212,7 +242,13 @@ import {
 ```
 Please check the `./src/predicates/*.test.js` files for the usage
 
-### pipe([fn1, fn2, ..])
+### pipeArgs(checkFn, fn)(input)
+Used for funciton argument validation. 
+```
+import { pipeArgs } form '@sknk/object-validator';
+```
+
+### pipe([fn1, fn2, ..])(input)
 Library also exports simple pipe function. 
 
 ```

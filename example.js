@@ -1,5 +1,11 @@
 //import validator, {pipe, is, setDefault, date } from '@sknk/object-validator'
-import validator, { pipe, is, setDefault, date } from "./src/index.js";
+import validator, {
+  pipe,
+  pipeArgs,
+  is,
+  setDefault,
+  date,
+} from "./src/index.js";
 
 /* import predicates separately as well. */
 //import { is, setDefault, date }  from '@sknk/object-validator/predicates'
@@ -38,3 +44,35 @@ console.log(obj);
    x: 'addfield'
  }
 */
+
+/**
+ * Function argument validation
+ */
+
+function add(a, b) {
+  return a + b;
+}
+
+function checkArgs(...args) {
+  let obj = Object.fromEntries(args.entries());
+  let schema = {
+    0: ["+integer", "0-100"],
+    1: ["+integer", "0-100"],
+    2: [
+      "object",
+      {
+        errCb: (e) => {
+          return new TypeError("Invalid Optional argument");
+        },
+      },
+    ],
+  };
+  obj = validator(obj, schema);
+  return Object.values(obj);
+}
+
+let strictAdd = pipeArgs(checkArgs, add);
+
+let ans = strictAdd(10, -2, { opts: false });
+
+console.log(ans);

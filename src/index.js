@@ -104,6 +104,19 @@ export const pipe = (fns) => (input) => {
   return fns.reduce((acc, fn) => fn(acc), input);
 };
 
+// @ts-ignore
+export const pipeArgs =
+  // @ts-ignore
+
+
+    (...fns) =>
+    // @ts-ignore
+    (...args) => {
+      return fns.reduce((acc, fn) => {
+        //console.log(acc, fn)
+        return fn(...acc);
+      }, args);
+    };
 /**
  * @type {(obj: Object, schema: Schema , opts?: ValidatorOpts)  => Object}
  */
