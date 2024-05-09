@@ -24,7 +24,7 @@
     "lint": "npm run format:check && npm run lint:check && npm run type:check",
     "format:fix": "prettier --write --no-config 'src/**/*.js'",
     "format:check": "prettier --check --no-config 'src/**/*.js'",
-    "test": "node --test ./test.js",
+    "test": "node --test ./test.js ./src/**/*.test.js",
     "build:cjs": "rimraf dist && babel src -d dist --copy-files",
     "prepare": "npm run type:emit && npm run build:cjs",
     "setup": "husky",
