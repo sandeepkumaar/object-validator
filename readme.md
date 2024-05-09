@@ -1,299 +1,256 @@
-# object-validator
-Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects
+## object-validator
+
+Functional Object schema validator for objects, function arguments, UI form inputs, API request payload.  
+Predicates are powered by [tiny-schema](https://www.npmjs.com/package/tiny-schema) package
+- Composable predicates
+- Customizable native errors
+- Simple error handling 
+- Integration with other validation libraries
+- Minimal footprint 
+- typescript support
 
 ## npm
 Install: `npm install @sknk/object-validator`  
 Test: `npm test`  
 Run examples: `npm run example`  
 
-## How is it different from others
-- Every schema based validation library has their own way of constructing the schema. It introduces a DSL and requires some knowledge on the docs. 
-see: [validator](#simple-validator)
-- Duplicate declarations. When multiple props share the same validations, they are required to be specified for each props. 
-see: [validator](#simple-validator)
-- They usally have their own validation system, their own way of throwing/returing validation errors/success. 
-see:  [customError](#custom-validation-error)
-- Since Validation libs has their own validation system and includes many validators built in. they are usually bigger in size.
-It may be an overkill for front-end apps that may only need typecheck or few basic validations. 
-see:  [extend with other libs](#extending-with-other-validation-modules)
-- Schema configurations become difficult/not possible if we want to validate based on other properties in the object. 
-see: [compare props](#comparing-props)
-- Most schema validation libs dont care much on sanitizing the props. Like assigning sensible defaults. see: [assign defaults](assign defaults)
-- The results of the validation usually they requires another conditional check to determine the flow
-Eg: 
+
+## Basic usage
+
 ```
-let result = xLibvalidate();
-if(!result.error) {
-  // u r good to go
-} else {
-  // throw or return 
+import validator from '@sknk/object-validator';
+// commonjs
+const validator = require('@sknk/object-validator');
+import 
+let obj = {
+  name: 'john',
+  age: 24
+};
+
+let schema = {
+  name: ["string", "/^.{3,8}$/"],
+  age: ["number", "18-24"], };
+
+obj = validator(obj, schema)
+```
+Throws error on validation failure. On success returns the object.
+
+
+## Validating function arguments
+You can also use this lib to validate the function arguments. Its done through a combination of `spread` operator and 
+`pipeArgs` utility to convert the arguments as objects for schema validation. 
+> Note : Since Array indexs are used as keys, when error is thrown, it throws with index as key. To have better error reporting
+> use `errCb` to customise the error. 
+```
+import validator, {pipeArgs} from '@sknk/object-validator';
+
+function add(a, b) {
+  return a + b;
+};
+
+function checkArgs(...args) {
+  let obj = Object.fromEntries(args.entries());
+  let schema = {
+    '0': ['+integer', '0-100'],
+    '1': ['+integer', '0-100'],
+    '2': ['object', {errCb: (e) => {
+      return  new TypeError('Invalid Optional argument');
+    }}]
+  };
+  obj = validator(obj, schema)
+  return Object.values(obj);
+};
+
+let strictAdd = pipeArgs(checkArgs, add);
+
+let ans = strictAdd(10, -2, {opts: false}) ;
+```
+Lot of the validation codes can be abstracted away from the actual implementation.
+
+## Predicates & Transform pipelines 
+```
+@typedef {Array<Predicate | string | ValidateOpts> | string | function} PredicateArray
+```
+Predicates can be a single|array of functions/predicates and single|array *strings* from `tiny-schema` package. checkout out their readme for more predicates.     
+**Custom predicates** are also supported. 
+```
+function string(value, key='input') {
+  if(typeof value === 'string') throw Error('Expecting string. Given ${key}: ${value}');
+  return value;
+};
+let schema = {
+  name: [string, maxString(8)],
+  age: ["number", "18-24"],
+  city: 'string', // single schema string
+  address: (i) => Error('') // single  predicate function.
+};
+obj = validate(obj, schema);
+```
+
+- key - optional, will be passed by the validator
+- predicate should return  or throw error 
+
+**Transforms** are similar to function predicates which can tranform values
+```
+const setDefault = (def) => (value) => {
+  return value || def;
+};
+
+let schema = {
+  'name?': [setDefault('abc'), string, maxString(8)],
+  age: ["number", "18-24"],
+};
+obj = validate({age: 24}, schema);
+```
+
+schema key validation pipelines are simple standalone functions. **no dependency** with the package which makes it lean 
+and allows you to extend other validation libraries with custom errors.
+
+## Schema pipeline opts - {errCb, opt}
+```
+@typedef {{ errCb?: (i: any) => any|never, optKey?: boolean}} ValidateOpts
+```
+
+- errCb : callback function that gets the error thrown by the validator from the pipeline. whatever errCb returns its thrown 
+again by the validator internally. use this to decorateError
+- opt: 2 ways to declare a key as *optional* key in schema
+  - using "?" at the end of the key `{"name?": [sring]}`
+  - using {opt=true} in the pipelines opts
+  - default is opt: false
+
+```
+let schema = {
+  'name?': [setDefault('abc'), string, maxString(8)],
+  age: ["number", "18-24", (errCb: (e) => {
+    e.message = 'age error';
+    return e; // should return error
+  }, 
+  opt: true
+  )],
+};
+```
+## Errors
+Errors thrown from validator are native Javascript Errors or whatever the error thrown by custom validator.   
+`validator` function adds additional properties like `key`, `value`, `predicate` on the Error object
+- key: object key on which validation is done
+- value: actual object key value
+- predicate: predicate function name or schema *string* used to perform validation
+
+> Note: Only Schema errors will be supplied with additional properties.
+
+TypeError
+```
+TypeError: Expected {age} to satisfy {18-24} validation. Given {age: 25}
+    at getError (file://tiny-schema-wrapper.js:6:11)
+    ...
+  predicate: '18-24',
+  key: 'age',
+  value: 25
 }
 ```
-see: [idiomatic usage](#idiomatic-usage)
-
-
-## Usage
-```javascript
-const {validate, composeValidators, pipe } = require('@sknk/object-validator');
-const { 
-  string, 
-  maxString, 
-  minNumber, 
-  minDate, 
-  maxDate,
-  boolean 
-} = require('@sknk/object-validator/predicates');
-const isEmail = require('validator/lib/isEmail');
-
-// wrap as a predicate fn
-let email = (pair) => {
-  let {key, value} = pair;
-  if(isEmail(value)) return pair;
-  throw TypeError(`Expected {${key}} to be of type email. Given {${key}: ${value}}`);
-};
-
-const user = {
-  name: 'sandeep',
-  age: 24,
-  city: 'cbe',
-  purchaseDate: '02/14/2021',
-  expiryDate: '02/15/2025',
-  email: 'cskumaar1992@gmail.com'
-};
-
-let validateExpiryDate = (user) => {
-  let {purchaseDate, expiryDate} = user;
-  let bool = new Date(purchaseDate) < new Date(expiryDate)
-  if(bool) return user; // dont forget to return the entire obj
-  throw TypeError('Invalid Expiry. Expiry date is before the purchase date');
-};
-
-let assignDefaults = ({isPremium=false, ...rest}) => ({...rest, isPremium});
-
-const validateUser = composeValidators(
-  validate(string)(["name", "city", "email"]),
-  validate(maxString(3))(["city"]),
-  validate(minNumber(18))(["age"], (e) => "User's age should be 18 or above"),
-  validate(
-    minDate("01/01/2020"),
-    maxDate("12/31/2029")
-  )(["purchaseDate", "expiryDate"]), // checks if dates fall within the date range
-  validate(email)(["email"]),
-  validate(boolean)(["isPremium?"]),
-  validateExpiryDate,
-  assignDefaults
-);
-
-var _user = validateUser(user); // throws error on failure; returns user obj on success
-_user = validateUser(user, (e) => false) // returns false on failure; returns user obj on success
-
+AggregateError
+```
+AggregateError: schemaValidator Errors
+    at schemaValidator (file://index.js:137:13)
+    ...
+  [errors]: [
+    TypeError: Expected {age} to satisfy {number} validation. Given {age: 25}
+        at getError (file://..tiny-schema-wrapper.js:6:11)
+        ...
+      predicate: 'number',
+      key: 'age',
+      value: '25'
+    },
+    TypeError: Unexpected keys [abc]
+        at strictKeyMatch (file:///home/sknk/sandeep/workspace/libraries/object-validator/src/index.js:34:11)
+        ...
+  ]
+}
 ```
 
-## API
-### validate(...predFns)(keys, [cb])(obj)
-`validate()()()` is a curry function that takes 3 args
-`PredFns` single or mulitiple Predicate functions that either throws or returns args  
-`keys` Array of Object keys to validate in an object
-`cb` an optional cb to *throw* custom error on failure
-`obj` object to validate
+## API 
+### validator(obj: object, schema: Schema, opt?: object) => object | Error
+```
+ @typedef {Record<string, any>} Object
+ @typedef {Record<string, PredicateArray>} Schema
+```
+- obj: input object to validate
+- schema:  object with predicates on each key
+  - PredicateArray : Predicates can be a function, schema string, or array of predicates and string with optional 
+  - ValidateOpts: Optional
 
-### composeValidators(...validators)([cb])
-takes a single or multiple validator functions  and an optional `cb` to *return/throw*  any value
+- opt:  Optional  { aggregareError=false, handleError: function, strict: true, pipeline: Predicate[]}
 
-### pipe(...fns)
-used to compose predicate functions
-
-
-
-## Explanations with examples
-
-### Simple validator
+###  Validator opts 
+#### aggreagateError
+Default: false
+when set to `true` it aggregates all the errors from the schema pipelines and throws an javascript `Aggregate Error`.  
+Individual errors are found in `error.errors`
 
 ```
-// returns arg or throws error
-validateString  = validate(function isString({key, value}) {
-  if(typeof value == "string") return {key, value};
-  throw TypeError(`Expected ${key} to be string. Given ${value}`);
-});
+let o = validator(obj, schema, {aggreagateError: true})
 ```
-Predicate function 
-- should be a pure, identity(a function which returns the same value you pass in) function
-- throws error on failed validation
-- takes a key-value pair of an object property to validate. 
-This allows the predicate function to be composable with other predicates which we will 
-see in later sections
+#### handleError
+Optional. When validator throws erorr ( both aggregate and single error) this function when provided gets invoked with the 
+error object. function's return value will the returned by the validator.
 
 ```
-validateStringProps = validateString(["name", "city"]);
+let bool = validator(obj, schema, {handleError: (e) => false})
+bool // false on validation failure
 ```
-validate the string properties in an object.
+#### strict
+By default, validator throws `Unexpected keys` error when there are keys which are not declared in the schema. to override
+this use {strict: false}
 
 ```
-let obj = validateStringProps({
-  name: "sandeep",
-  age: 24,
-  city: "cbe"
-
-});
+let bool = validator(obj, schema, {strict: false}) // skips additional keys 
 ```
-Pass the object to validate. This will validate only `name, city` props to be strings.  
-When validation fails it throws error.   
-
-Note: 
-Using curried function allows us to get these partial functions that can be applied to 
-different sets facilitating max reusablity.
-
-### compose multiple predicate fn 
-```
-let minString5  = (args) => {
-  let {key, value} = args;
-  if(value.length >= 5) return args;
-  throw TypeError(`Expected {${key}} to be of minimum length 5. Given {${key}: ${value}}`);
-};
-
-validateMinString = validate(isString, minString5);
-obj = validateMinString(["name", "city"])({obj});
-```
-`validateMinString` fn validate obj props to be a string of min length 5 
-
-
-### Optional props
-Make props optional by suffixing the prop nam with "?"
-```
-validateStringProps(["name", "age", "city?"]);
-```
-this will validate the city only if its exists. else it will skip.  
-
-
-Now we have the capability to use/compose predicates into a **validator** function 
-that can be  applied to multiple similar props in an object  
-
-### Custom validation error
-You can also throw custom error overiding what predicate function throws
-```
-let validateStringProps = validateString(["name", "city", "age"], function(e, pair) {
-  console.log("predicate's err", e);
-  return `Error in ${pair.key} ${pair.value}`
-});
-validateStringProps(obj); // throws Error in age 24
-```
-The error function is given as second arg. Note: whatever you return in that function gets thrown.
-
-### Compose validators
-Lets compose different types of **validators** to apply them to different prop types in an object
-```
-let validationSchema = composeValidators(
-  validate(string)(["name", "city"]),
-  validate(number)(["age"])
-);
-validationSchema(obj); // returns {name, age, city}
-```
-if validataton fails for age then error thrown as
-```
-TypeError: Expected {age} to be of type Nuber. Given {age: "x"}
-```
-
-### Silence throw and return custom value
-`validationSchema` throws error when validation fails. You can hook this by providing a
-callback fuction
-```
-let op = validationSchema(obj, function(e) {
-  return false;
-}); 
-op; // false
-//or 
-let op = validationSchema(obj, function(e) {
-   e.statusCode = 400;
-   throw e;
-}); 
-```
-callback fn is supplied with error thrown by the validator. you can either return a value or 
-rethrow with more error info
-
-### Comparing props
-`composeValidator` is a *pipe* function that supplies the same obj to all the validators in the array.  
-we write a custom function that takes the object and perform validation by comparing props   
-Note: the custom function should follow the rules of composability. ie. pure, identity function
-```
-let obj = {
-  name: "sandeep",
-  age: 24,
-  startDate: "09/21/2020",
-  endDate: "09/16/2020"
-};
-
-let checkDate = (o) => {
-  let { startDate, endDate } = o;
-  if(new Date(startDate) < new Date(endDate)) return o;
-  throw TypeError("startDate is after the endDate");
-};
-
-let validationSchema = composeValidators(
-  validate(string)(["name", "city?"]),
-  validate(number)(["age"]),
-  checkDate // validate by comparing startDate, endDate values
-);
-validationSchema(obj);
-```
-### assign defaults
-```
-let assignDefaults = ({city="chn", ...rest}) => ({city, ...rest})
-let validate = composeValidators(
-  validate(string)(["name", "city?"]),
-  validate(number)(["age"]),
-  assignDefaults,
-);
-validate(obj);
-```
-
-#### Predicates
-we have some most often used predicate functions as part of this module.
-```
-import * from "@sknk/object-validator/predicates";
-```
-you can find them in `./predicates/*`
-
-
-### Extending with other validation modules
-Since `object-validator` is simply an orchestration around the validation 
-functions you can use any other lib functions.
+#### object pipeline
+Post pipeline functions. these functions are run after schema validation is done. each function is passed with the object.
+This is similar to pipe behaviour where we can do data transform or multiple fields compare and assert checks
 
 ```
-const isEmail = require('validator/lib/isEmail');
-
-// wrap as a predicate fn
-let email = (pair) => {
-  let {key, value} = pair;
-  if(isEmail(value)) return pair;
-  throw TypeError(`Expected {${key}} to be of type ${expected}. Given {${key}: ${value}}`);
-};
-```
-
-
-#### Idiomatic usage
-We also export `pipe` function that comes handy when you want to separate the logic and 
-argument validation in a function.
-Eg:
-```
-let add = ({a, b}) => a + b;
-let validate = validateNumber(["a", "b"]);
-
-export pipe(validate, add);
-```
-The imported `add` function when called it first validates and then runs add logic.
-
-In Express apps, you can validate request data as such
-```
-app.post("/", function(req, res, next) {
-  let body = validateReq(req.body, function(e) {
-    e.statusCode = 400;
-    e.status = "BAD_REQUEST";
-    throw e;
-  });
+let o = validator(obj, schema, { 
+  pipeline: [
+   (o) => {
+     let {startDate, endDate} = o;
+     if(startDate > endDate) throw Error('startDate cannot be greater than endDate');
+     return o // always return input object or the transformed one
+   },
+   // another fn
+   // ...
+  ]
+}
 })
 ```
-when error is thrown, express common error handler is called that returns the error props.
+Schema can only check individual fields. This pipeline opts will allows us to validate togther as an object.
 
+Note: 
+- Errors thrown from object pipeline are handled by `handleError`
+- other options like aggregateError, strict are only for schema validation
 
-## license
-MIT
+### predicates
+Library also exports some basic predicates like date, and some helper utils
+```
+import {
+  is, // wrapper around tiny-schema. already included in validator
+  setDefault,
+  hasKeys,
+  pick,
+  date, toDate, minDate, maxDate, dateEquals // date methods
+} from '@sknk/object-validator';
+```
+Please check the `./src/predicates/*.test.js` files for the usage
+
+### pipeArgs(checkFn, fn)(input)
+Used for funciton argument validation. 
+```
+import { pipeArgs } form '@sknk/object-validator';
+```
+
+### pipe([fn1, fn2, ..])(input)
+Library also exports simple pipe function. 
+
+```
+import { pipe } form '@sknk/object-validator';
+```

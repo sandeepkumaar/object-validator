@@ -1,0 +1,13 @@
+# ignore all dotfiled
+.*
+!/.gitignore
+!/.npmignore
+
+# ignore test files
+test.js
+./src/**/*.test.js
+./dist/**/*.test.js
+
+# confis
+babel.config.cjs
+tsconfig.json

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+
+    "module": "nodenext", // esm vs cjs
+    "moduleResolution": "nodenext", //node's module resolution
+    "lib": ["esnext"], // support types for DOM, ESNext
+
+    "strict": true, // enables few useful typechecking - noImplicitAny,..etc
+    "noImplicitReturns": true
+  },
+  "include": ["index.js", "src/**/*.js"],
+  "exclude": ["test.js", "src/**/*.test.js"] // uncomment this when writing test to check your types are correct
+
+}

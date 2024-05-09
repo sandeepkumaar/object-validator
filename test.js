@@ -1,173 +1,261 @@
-const { describe, Try } = require("riteway");
-const { validate, composeValidators } = require("./");
-const { string, minString, number } = require("./predicates");
+import { test } from "node:test";
+import assert from "node:assert";
+import tryCatch from "try-catch";
+import { is, defined, setDefault, date, pick } from "./src/predicates/index.js";
 
-let obj = {
-  name: "sandeep",
-  age: 24,
-  city: "cbe"
-};
-console.log("obj =",obj);
-/**
- * validate
- */
-describe("validate()()()", async function(assert) {
-  let validateString = validate(string);
+import validator from "./src/index.js";
 
-  { // passing validation
-    let keys = ["name", "city"];
-    let validateStringProps = validateString(keys);
-    assert({
-      given: `validate(string)([${keys}])(obj)`,
-      should: "return obj",
-      actual: validateStringProps(obj),
-      expected: obj
-    });
-  }
-  { // failing validation
-    let keys = ["name", "age"];
-    let validateStringProps = validateString(keys);
-    assert({
-      given: `validate(string)([${keys}])(obj)`,
-      should: "throw Error expecting string for age",
-      actual: Try(validateStringProps, obj).toString(),
-      expected: "TypeError: Expected {age} to be of type string. Given {age: 24}"
-    });
-
-  }
-
-  { // optional props
-    let keys = ["name", "city?", "address?"];
-    let validateStringProps = validateString(keys);
-    assert({
-      given: `validate(string)([${keys}])(obj)`,
-      should: "return obj",
-      actual: validateStringProps(obj),
-      expected: obj
-    });
-  }
-
-  { // composing multilple predicates
-   
-    let validateStringProps = validate(string, minString(4))(["name", "city"]);
-    assert({
-      given: "validate(string, minString(4))(['name', 'city'])(obj)",
-      should: "throw Error expecting city to be of minumum 4 chars",
-      actual: Try(validateStringProps, obj).toString(),
-      expected: "TypeError: Expected {city} to be of minimum length 4. Given {city: cbe}"
-    })
-
-  }
-
-  { // throw custom error
-
-    let validateStringProps = validateString(["name", "city", "age"], function(e, pair) {
-      return `Error in ${pair.key} ${pair.value}`
-    });
-    assert({
-      given: "validate(string)(['name', 'city', 'age'], errFn)(obj)",
-      should: "throw Custom Error ",
-      actual: Try(validateStringProps, obj).toString(),
-      expected: "Error in age 24"
-    })
-
-  }
-})
-
-
-/**
- * composeValidator
- */
-describe("composeValidators()()", async function(assert) {
-
-  { // compose multipe validators: success
-    let validationSchema = composeValidators(
-      validate(string)(["name", "city"]),
-      validate(number)(["age"])
-    );
-    assert({
-      given: "composeValidators(string(name, city), number(age))(obj)",
-      should: "return obj",
-      actual: validationSchema(obj),
-      expected: obj
-    })
-
-  }
-
-  { // compose multipe validators: failure
-    let validationSchema = composeValidators(
-      validate(string)(["name", "city"]),
-      validate(number)(["age", "name"])
-    );
-    assert({
-      given: "composeValidators(string(name, city), number(age, name))(obj)",
-      should: "throw Error expecting name to be of type number",
-      actual: Try(validationSchema, obj).toString(),
-      expected: "TypeError: Expected {name} to be of type number. Given {name: sandeep}"
-    })
-  }
-
-  { // silence throw and return custom value
-    let validationSchema = composeValidators(
-      validate(string)(["name", "city"]),
-      validate(number)(["age", "name"])
-    );
-    assert({
-      given: "composeValidators(string(name, city), number(age))(obj, cb)",
-      should: "return the cb value",
-      actual: validationSchema(obj, function(e) {return false}),
-      expected: false
-    })
-  }
-
-  { // compare props
-
-    let obj = {
-      name: "sandeep",
-      age: 24,
-      startDate: "09/21/2020",
-      endDate: "09/16/2020"
-    };
-    console.log("obj: ", obj);
-    let checkDateInterval = (o) => {
-      let { startDate, endDate } = o;
-      if(new Date(startDate) < new Date(endDate)) return o;
-      throw TypeError("startDate is after the endDate");
-    };
-
-    let validationSchema = composeValidators(
-      validate(string)(["name", "city?"]),
-      validate(number)(["age"]),
-      checkDateInterval,
-    );
-
-    assert({
-      given: "composeValidators(string(name, city), number(age), checkDateInterval)(obj)",
-      should: "throw Error startDate is after the endDate",
-      actual: Try(validationSchema, obj).toString(),
-      expected: "TypeError: startDate is after the endDate"
-    })
-  }
-
-  { // assign defaults
-    let assignDefaults = ({address="kumudham", ...rest}) => ({address, ...rest})
-    let validationSchema = composeValidators(
-      validate(string)(["name", "address?"]),
-      validate(number)(["age"]),
-      assignDefaults,
-    );
-
-    assert({
-      given: "composeValidators(string(name, city), number(age), assignDefaultAddress)(obj)",
-      should: "return obj with default address",
-      actual: validationSchema(obj),
-      expected: {
-        ...obj,
-        address: "kumudham"
-      }
-    })
-
-  }
-
+test("Invalid arguments checks", async (t) => {
+  let obj = {
+    name: "sandeep",
+    age: 30,
+  };
+  let [error1] = tryCatch(validator, obj, {
+    name: [],
+  });
+  let [error2] = tryCatch(validator, obj, {
+    name: "abc",
+  });
+  let [error3] = tryCatch(validator, obj, {
+    name: [{}],
+  });
+  let [error4] = tryCatch(validator, obj);
+  let [error5] = tryCatch(validator, [], {
+    name: "string",
+  });
+  assert.deepStrictEqual(
+    error1?.toString(),
+    'TypeError: "name" should have either tiny-schema string or a function or an array with minimum one predicate',
+  );
+  assert.deepStrictEqual(
+    error2?.toString(),
+    "SyntaxError: Malformed schema string",
+  );
+  assert.deepStrictEqual(
+    error3?.toString(),
+    'TypeError: No predicates found for "name"',
+  );
+  assert.deepStrictEqual(
+    error4?.toString(),
+    "TypeError: Expected schema to be an object. Given undefined",
+  );
+  assert.deepStrictEqual(
+    error5?.toString(),
+    "TypeError: Expected input to be an object. Given ",
+  );
 });
 
+test("Schema pipelines: tiny-schema string, predicate function, predicateArray", async (t) => {
+  let obj = {
+    name: "sandeep",
+    age: 30,
+  };
+  await t.test("tiny-schema strings", () => {
+    let schema = {
+      name: ["string"],
+      age: ["number", "18-24"],
+    };
+    let [error] = tryCatch(validator, obj, schema);
+    assert.deepStrictEqual(
+      error?.toString(),
+      "TypeError: Expected {age} to satisfy {18-24} validation. Given {age: 30}",
+    );
+  });
+  await t.test("single function, single schema string", () => {
+    let schema1 = {
+      name: function pred() {
+        throw TypeError("always throw");
+      },
+      age: ["number", "18-24"],
+    };
+    let schema2 = {
+      name: "string",
+      age: "18-24",
+    };
+    let [error1] = tryCatch(validator, obj, schema1);
+    assert.deepStrictEqual(error1?.toString(), "TypeError: always throw");
+    assert.deepStrictEqual(error1?.key, "name");
+    assert.deepStrictEqual(error1?.value, "sandeep");
+    assert.deepStrictEqual(error1?.predicate, "pred");
+    let [error2] = tryCatch(validator, obj, schema2);
+    assert.deepStrictEqual(
+      error2?.toString(),
+      "TypeError: Expected {age} to satisfy {18-24} validation. Given {age: 30}",
+    );
+    assert.deepStrictEqual(error2?.key, "age");
+    assert.deepStrictEqual(error2?.value, 30);
+    assert.deepStrictEqual(error2?.predicate, "18-24");
+  });
+  await t.test("predicates array with different combo", () => {
+    let schema1 = {
+      name: [
+        "string",
+        () => {
+          throw TypeError("always throw");
+        },
+      ],
+      age: [is("string"), "18-24"],
+    };
+    let schema2 = {
+      name: "string",
+      age: [is("string"), "18-24"],
+    };
+    let [error1] = tryCatch(validator, obj, schema1);
+    assert.deepStrictEqual(error1?.toString(), "TypeError: always throw");
+    let [error2] = tryCatch(validator, obj, schema2);
+    assert.deepStrictEqual(
+      error2?.toString(),
+      "TypeError: Expected {age} to satisfy {string} validation. Given {age: 30}",
+    );
+  });
+
+  await t.test("predicates can modify values", () => {
+    let schema1 = {
+      name: ["string", (v) => v + "kumaar"],
+      age: "number",
+    };
+    let [, value] = tryCatch(validator, obj, schema1);
+    assert.deepStrictEqual(value, {
+      name: "sandeepkumaar",
+      age: 30,
+    });
+  });
+});
+
+test("Schema opts: {errCb, optKey}", async (t) => {
+  //t.runOnly(true);
+  let obj = {
+    name: "sandeep",
+    age: 30,
+  };
+  await t.test("errCb", () => {
+    let schema = {
+      name: ["string"],
+      age: [
+        is("number"),
+        "18-24",
+        {
+          errCb: (e) => {
+            e.message = "age is wrong";
+            return e;
+          },
+        },
+      ],
+    };
+    let [error] = tryCatch(validator, obj, schema);
+    assert.deepStrictEqual(error?.toString(), "TypeError: age is wrong");
+  });
+
+  await t.test("optKey", () => {
+    let schema1 = {
+      name: ["string"],
+      age: ["number"],
+      city: ["string"],
+    };
+    let schema2 = {
+      name: ["string"],
+      age: ["number"],
+      "city?": ["string"],
+    };
+    let schema3 = {
+      name: ["string"],
+      age: ["number"],
+      city: ["string", { optKey: true }],
+    };
+    let [error1] = tryCatch(validator, obj, schema1);
+    assert.deepStrictEqual(
+      error1?.toString(),
+      "TypeError: Expected {city} to satisfy {string} validation. Given {city: undefined}",
+    );
+    let [, value1] = tryCatch(validator, obj, schema2);
+    assert.deepStrictEqual(value1, obj);
+    let [, value2] = tryCatch(validator, obj, schema3);
+    assert.deepStrictEqual(value2, obj);
+  });
+});
+
+// aggregateError, handleError, pipeline
+test("Validator Options: { strict=true, aggregateError=false, handleError: fn, pipeline: []}", async (t) => {
+  let obj = {
+    name: "sandeep",
+    age: 30,
+  };
+  await t.test("strict", () => {
+    let newObj = { ...obj, x: "y" };
+    let schema = {
+      name: ["string"],
+      age: ["number"],
+    };
+    let [error1] = tryCatch(validator, newObj, schema);
+    assert.deepStrictEqual(
+      error1?.toString(),
+      "TypeError: Unrecognized keys [x]",
+    );
+    let [, value] = tryCatch(validator, newObj, schema, { strict: false });
+    assert.deepStrictEqual(value, newObj);
+  });
+
+  await t.test("aggregaeError", () => {
+    let schema = {
+      name: ["number", "18-20"],
+      age: ["string"],
+    };
+    let [error] = tryCatch(validator, obj, schema, { aggregateError: true });
+    assert.deepStrictEqual(
+      error?.toString(),
+      "AggregateError: schemaValidator Errors",
+    );
+    assert.deepStrictEqual(error?.errors.length, 2);
+    assert.deepStrictEqual(
+      error?.errors[0].toString(),
+      "TypeError: Expected {name} to satisfy {number} validation. Given {name: sandeep}",
+    );
+    assert.deepStrictEqual(
+      error?.errors[1].toString(),
+      "TypeError: Expected {age} to satisfy {string} validation. Given {age: 30}",
+    );
+  });
+  await t.test("handleError", () => {
+    let schema = {
+      name: ["number", "18-20"],
+      age: ["string"],
+    };
+    let [, value] = tryCatch(validator, obj, schema, {
+      aggregateError: true,
+      handleError: (error) => {
+        assert.deepStrictEqual(
+          error?.toString(),
+          "AggregateError: schemaValidator Errors",
+        );
+        assert.deepStrictEqual(error?.errors.length, 2);
+        assert.deepStrictEqual(
+          error?.errors[0].toString(),
+          "TypeError: Expected {name} to satisfy {number} validation. Given {name: sandeep}",
+        );
+        assert.deepStrictEqual(
+          error?.errors[1].toString(),
+          "TypeError: Expected {age} to satisfy {string} validation. Given {age: 30}",
+        );
+        return false;
+      },
+    });
+    assert.deepStrictEqual(value, false);
+  });
+
+  await t.test("pipeline", () => {
+    let obj = {
+      name: "sandeep",
+      age: 30,
+    };
+    let modifiedObj = { ...obj, x: "unknown" };
+    let schema = {
+      name: ["string"],
+      age: ["number"],
+    };
+    let [, value] = tryCatch(validator, modifiedObj, schema, {
+      strict: false,
+      pipeline: [pick(["name", "age"])],
+    });
+    assert.deepStrictEqual(value, obj);
+  });
+});

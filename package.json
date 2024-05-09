@@ -1,24 +1,72 @@
 {
   "name": "@sknk/object-validator",
-  "version": "1.0.3",
-  "description": "Functions over Object Schemas, composable assertions, customizable errors - validator for JS objects",
-  "main": "index.js",
-  "scripts": {
-    "example": "node example.js",
-    "test": "riteway test.js predicates/**/*.test.js"
+  "version": "2.0.0",
+  "description": "function argument and Schema validator, composable predicates, customizable errors, extends with external validation libraries - minimal footprint",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/index.js"
+    },
+    "./predicates": {
+      "import": "./src/predicates/index.js",
+      "require": "./dist/predicates/index.js"
+    }
   },
-  "keywords": [
-    "schema",
-    "validator",
-    "object-validator",
-    "compose"
-  ],
+  "scripts": {
+    "type:remove": "rimraf -g ./index.d.ts './src/**/*.d.ts'",
+    "type:emit": " npm run type:remove && tsc --noEmit false --declaration --emitDeclarationOnly",
+    "type:check": "tsc",
+    "lint:check": "eslint src",
+    "lint:fix": "eslint src --fix ",
+    "lint": "npm run format:check && npm run lint:check && npm run type:check",
+    "format:fix": "prettier --write --no-config 'src/**/*.js'",
+    "format:check": "prettier --check --no-config 'src/**/*.js'",
+    "test": "node --test ./test.js ./src/**/*.test.js",
+    "build:cjs": "rimraf dist && babel src -d dist --copy-files",
+    "prepare": "npm run type:emit && npm run build:cjs",
+    "setup": "husky",
+    "pre-commit": "lint-staged",
+    "pre-push": "npm run lint && npm test"
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run format:fix",
+      "git add ."
+    ]
+  },
+  "dependencies": {
+    "tiny-schema": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.5",
+    "@babel/core": "^7.24.5",
+    "@babel/preset-env": "^7.24.5",
+    "@types/node": "^20.12.7",
+    "@types/try-catch": "^3.0.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "try-catch": "^3.0.1",
+    "typescript": "^5.3.3"
+  },
   "author": "sandeepkumaar.c",
   "license": "ISC",
-  "devDependencies": {
-    "is-equal": "^1.6.1",
-    "riteway": "^6.1.2"
-  },
+  "keywords": [
+    "schema",
+    "argument",
+    "object",
+    "type guards",
+    "validator",
+    "object-validator",
+    "compose",
+    "minimal footprint"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/sandeepkumaar/object-validator"
