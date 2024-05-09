@@ -33,7 +33,7 @@ Throws error on validation failure. On success returns the object.
 
 
 
-## Predicate & Tranform pipelines 
+## Predicates & Transform pipelines 
 Predicates can be *strings* from `tiny-schema` package. checkout out their readme for more predicates.     
 **Custom predicates** are also supported. 
 ```
@@ -88,10 +88,10 @@ let schema = {
 ```
 ## Errors
 Errors thrown from validator are native Javascript Errors or whatever the error thrown by custom validator.   
-validator add additional properties like `key`, `value`, `predicate`  
+`validator` function adds additional properties like `key`, `value`, `predicate` on the Error object
 - key: object key on which validation is done
 - value: actual object key value
-- predicate: predicate function name used to perform validation
+- predicate: predicate function name or schema *string* used to perform validation
 
 > Note: Only Schema errors will be supplied with additional properties.
 
