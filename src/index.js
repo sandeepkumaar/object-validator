@@ -1,3 +1,4 @@
+export * from "./predicates/index.js";
 import { parsePredicates, strictKeyMatch } from "./utils.js";
 // @ts-ignore
 import check from "tiny-schema";
@@ -99,7 +100,7 @@ function schemaValidator(obj, schema, opts = {}) {
 }
 
 /** @type {(fns: function[]) => (input: any) => any | never } */
-const pipe = (fns) => (input) => {
+export const pipe = (fns) => (input) => {
   return fns.reduce((acc, fn) => fn(acc), input);
 };
 
@@ -125,5 +126,3 @@ export default function validator(obj, schema, opts = {}) {
     throw e;
   }
 }
-
-export { validate, schemaValidator, pipe };

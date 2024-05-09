@@ -7,6 +7,7 @@ Predicates are powered by [tiny-schema](https://www.npmjs.com/package/tiny-schem
 - Simple error handling 
 - Integration with other validation libraries
 - Minimal footprint 
+- typescript support
 
 ## npm
 Install: `npm install @sknk/object-validator`  
@@ -17,6 +18,10 @@ Run examples: `npm run example`
 ## Basic usage
 
 ```
+import validator from '@sknk/object-validator';
+// commonjs
+const validator = require('@sknk/object-validator');
+import 
 let obj = {
   name: 'john',
   age: 24
@@ -24,8 +29,7 @@ let obj = {
 
 let schema = {
   name: ["string", "/^.{3,8}$/"],
-  age: ["number", "18-24"],
-};
+  age: ["number", "18-24"], };
 
 obj = validator(obj, schema)
 ```
@@ -179,6 +183,22 @@ Note:
 - Errors thrown from object pipeline are handled by `handleError`
 - other options like aggregateError, strict are only for schema validation
 
-## TODO
-- publish - commonjs
-- merge
+### predicates
+Library also exports some basic predicates like date, and some helper utils
+```
+import {
+  is, // wrapper around tiny-schema. already included in validator
+  setDefault,
+  hasKeys,
+  pick,
+  date, toDate, minDate, maxDate, dateEquals // date methods
+} from '@sknk/object-validator';
+```
+Please check the `./src/predicates/*.test.js` files for the usage
+
+### pipe([fn1, fn2, ..])
+Library also exports simple pipe function. 
+
+```
+import { pipe } form '@sknk/object-validator';
+```

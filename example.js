@@ -1,4 +1,4 @@
-import { validator } from "./src/index.js";
+import validator, { pipe } from "./src/index.js";
 import { is } from "./src/predicates/index.js";
 const string = is("string");
 const number = is("number");
