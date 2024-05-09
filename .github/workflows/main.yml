@@ -1,12 +1,12 @@
 name: main-ci
 on: 
   push: 
-    branches: main
+    branches: master
 
 jobs: 
   test: 
     uses: ./.github/workflows/test.yml
   publish: 
-    uses: ./github/workflows/build-publish.yml
+    uses: ./.github/workflows/build-publish.yml
     
   
