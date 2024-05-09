@@ -22,7 +22,7 @@ const identity = (i) => i;
  *  aggregateError?: boolean
  * }} SchemaOpts
  *
- * @typedef {{ errCb?: function, optKey?: boolean}} ValidateOpts
+ * @typedef {{ errCb?: (i: any) => any|never, optKey?: boolean}} ValidateOpts
  *
  * @typedef {Array<Predicate | string | ValidateOpts> | string | function} PredicateArray
  * @typedef {Record<string, any>} Object

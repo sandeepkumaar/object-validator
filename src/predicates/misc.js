@@ -19,7 +19,7 @@ const setDefault = (def) => (value) => {
 const hasKeys =
   (keys = []) =>
   (obj = {}) => {
-    let missingKeys = keys.filter((key = "") => key in obj);
+    let missingKeys = keys.filter((key = "") => !(key in obj));
     if (missingKeys.length)
       throw TypeError(`Expected properties ${missingKeys} on the input object`);
     return obj;

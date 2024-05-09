@@ -29,13 +29,19 @@ export const strictKeyMatch = function (o1 = {}, o2 = {}, strict = true) {
 };
 
 /**
- * @param {PredicateArray} predicates
+ * @typedef {{
+ * predicates: Array<Predicate>,
+ * opts: ValidateOpts,
+ * key: string
+ * }} PredicateResult
+ * @type {(predicates: PredicateArray, _key?: string) => PredicateResult}
  */
 export const parsePredicates = function (predicates = [], _key = "") {
   let key = _key;
+  /** @type{Array<Predicate>}*/
+  let parsedPredicates = [];
   /** @type {ValidateOpts} */
   let opts = {
-    /** @param {any} i*/
     errCb: (i) => i,
     optKey: false,
   };
@@ -50,26 +56,31 @@ export const parsePredicates = function (predicates = [], _key = "") {
     );
 
   // if function or string, convert it to predicate array
-  /** @type {Array<Predicate | string | ValidateOpts>}*/
+  /** @type {Array<Predicate | string>}*/
   let predicatesArray = [];
-  if (isFunction || isString)
-    predicatesArray = /** @type {Array<Predicate | string | ValidateOpts>}*/ ([
-      predicates,
-    ]);
+  if (isFunction || isString) {
+    predicatesArray = [/** @type{Predicate | string}*/ (predicates)];
+  } else {
+    predicatesArray = /** @type{Array<Predicate | string>}*/ (predicates);
+  }
+
   let lastElement = predicatesArray.at(-1);
   opts = check("object")(lastElement)
-    ? /** @type{ValidateOpts} */ (predicatesArray.pop())
+    ? /** @type{ValidateOpts}*/ (predicatesArray.pop())
     : opts;
 
   if (!predicatesArray.length)
     throw TypeError(`No predicates found for "${key}"`);
-  // map tiny-schema style scheme with wrapper
 
-  predicatesArray = predicatesArray.map((predicate) => {
-    if (check("string")(predicate)) return is(/**@type{string} */ (predicate));
-    return predicate;
-  });
-  let invalidPredicates = predicatesArray.filter(
+  // map tiny-schema style scheme with wrapper
+  parsedPredicates = /** @type{Predicate[]}*/ (
+    predicatesArray.map((predicate) => {
+      if (check("string")(predicate))
+        return is(/**@type{string} */ (predicate));
+      return predicate;
+    })
+  );
+  let invalidPredicates = parsedPredicates.filter(
     (predicate) => typeof predicate !== "function",
   );
   if (invalidPredicates.length)
@@ -80,5 +91,5 @@ export const parsePredicates = function (predicates = [], _key = "") {
 
   opts.optKey = opts.optKey || isOptionalKey;
 
-  return { predicates, opts, key };
+  return { predicates: parsedPredicates, opts, key };
 };

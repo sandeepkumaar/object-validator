@@ -195,7 +195,7 @@ test("Validator Options: { strict=true, aggregateError=false, handleError: fn, p
     assert.deepStrictEqual(value, newObj);
   });
 
-  await t.test("strict", () => {
+  await t.test("aggregaeError", () => {
     let schema = {
       name: ["number", "18-20"],
       age: ["string"],
@@ -215,7 +215,7 @@ test("Validator Options: { strict=true, aggregateError=false, handleError: fn, p
       "TypeError: Expected {age} to satisfy {string} validation. Given {age: 30}",
     );
   });
-  await t.test("strict", () => {
+  await t.test("handleError", () => {
     let schema = {
       name: ["number", "18-20"],
       age: ["string"],
