@@ -9,5 +9,8 @@ jobs:
   publish: 
     needs: test
     uses: ./.github/workflows/build-publish.yml
+    secrets:
+      npm-token: ${{ secrets.NPM_AUTH_TOKEN }} 
+        
     
   

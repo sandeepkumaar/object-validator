@@ -1,6 +1,11 @@
 name: build and publish
 
-on: workflow_call
+on: 
+  workflow_call: 
+    secrets: 
+      npm-token: 
+        required: true
+  
 
 jobs: 
   build: 
@@ -14,4 +19,4 @@ jobs:
       - run: npm ci
       - uses: JS-DevTools/npm-publish@v3
         with:
-          token: ${{ secrets.NPM_TOKEN_TEST }}
+          token: ${{ secrets.npm-token }}
