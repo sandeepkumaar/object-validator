@@ -5,8 +5,8 @@
 
 # ignore test files
 test.js
-./src/**/*.test.js
-./dist/**/*.test.js
+src/**/*.test.js
+dist/**/*.test.js
 
 # confis
 babel.config.cjs
