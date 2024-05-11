@@ -1,6 +1,6 @@
 {
   "name": "@sknk/object-validator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "function argument and Schema validator, composable predicates, customizable errors, extends with external validation libraries - minimal footprint",
   "type": "module",
   "main": "dist/index.js",
