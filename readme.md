@@ -7,7 +7,7 @@ Predicates are powered by [tiny-schema](https://www.npmjs.com/package/tiny-schem
 - Simple error handling 
 - Integration with other validation libraries
 - Minimal footprint 
-- typescript support
+- fully typed - typescript
 
 ## npm
 Install: `npm install @sknk/object-validator`  
