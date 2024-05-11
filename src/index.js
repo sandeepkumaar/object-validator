@@ -1,4 +1,3 @@
-export * from "./predicates/index.js";
 import { parsePredicates, strictKeyMatch } from "./utils.js";
 // @ts-ignore
 import check from "tiny-schema";
@@ -118,7 +117,7 @@ export const pipeArgs =
       }, args);
     };
 /**
- * @type {(obj: Object, schema: Schema , opts?: ValidatorOpts)  => Object}
+ * @type {(obj: Object, schema: Schema , opts?: ValidatorOpts)  => any | never}
  */
 export default function validator(obj, schema, opts = {}) {
   if (!check("object")(obj))

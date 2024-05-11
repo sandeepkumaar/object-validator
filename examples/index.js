@@ -1,15 +1,7 @@
-//import validator, {pipe, is, setDefault, date } from '@sknk/object-validator'
-import validator, {
-  pipe,
-  pipeArgs,
-  is,
-  setDefault,
-  date,
-} from "./src/index.js";
+import validator, { pipe, pipeArgs } from "@sknk/object-validator";
 
 /* import predicates separately as well. */
-//import { is, setDefault, date }  from '@sknk/object-validator/predicates'
-
+import { is, setDefault, date } from "@sknk/object-validator/predicates";
 let obj = validator(
   {
     name: "name",
@@ -34,7 +26,7 @@ let obj = validator(
   },
 );
 
-console.log(obj);
+console.log("object-validator", obj);
 /*
  {
    name: 'name',
@@ -48,17 +40,19 @@ console.log(obj);
 /**
  * Function argument validation
  */
-
 function add(a, b) {
   return a + b;
 }
 
 function checkArgs(...args) {
-  let obj = Object.fromEntries(args.entries());
+  //let obj = Object.fromEntries(args.entries());
+  let [a, b, opts] = args;
+  let obj = { a, b, opts };
+
   let schema = {
-    0: ["+integer", "0-100"],
-    1: ["+integer", "0-100"],
-    2: [
+    a: ["+integer", "0-100"],
+    b: ["+integer", "0-100"],
+    opts: [
       "object",
       {
         errCb: (e) => {
@@ -73,6 +67,6 @@ function checkArgs(...args) {
 
 let strictAdd = pipeArgs(checkArgs, add);
 
-let ans = strictAdd(10, -2, { opts: false });
+let res = strictAdd(10, 2, { opts: false });
 
-console.log(ans);
+console.log("argument-validator", res);

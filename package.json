@@ -1,6 +1,6 @@
 {
   "name": "@sknk/object-validator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "function argument and Schema validator, composable predicates, customizable errors, extends with external validation libraries - minimal footprint",
   "type": "module",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "format:fix": "prettier --write --no-config 'src/**/*.js'",
     "format:check": "prettier --check --no-config 'src/**/*.js'",
     "test": "node --test ./test.js ./src/**/*.test.js",
-    "build:cjs": "rimraf dist && babel src -d dist --copy-files",
+    "build:cjs": "rimraf dist/**/!package.json && babel src -d dist --copy-files",
     "prepare": "npm run type:emit && npm run build:cjs",
     "setup": "husky",
     "pre-commit": "lint-staged",
