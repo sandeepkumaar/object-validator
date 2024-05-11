@@ -8,6 +8,12 @@ test.js
 src/**/*.test.js
 dist/**/*.test.js
 
+# ignore examples
+examples
+
 # confis
 babel.config.cjs
 tsconfig.json
+
+# npm pack
+*.tgz

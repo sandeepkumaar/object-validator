@@ -14,13 +14,23 @@ Install: `npm install @sknk/object-validator`
 Test: `npm test`  
 Run examples: `npm run example`  
 
+## imports/require
+```
+// esm
+import validator, {pipe, pipeArgs } from '@sknk/object-validator';
+import {is, setDefault} from '@sknk/object-validator/predicates';
+
+// commonjs
+const { default: validator, pipe, pipeArgs } = require('@sknk/object-validator');
+const { is, setDefault, date } = require('@sknk/object-validator/predicates')
+```
 
 ## Basic usage
 
 ```
 import validator from '@sknk/object-validator';
 // commonjs
-const validator = require('@sknk/object-validator');
+const { default: validator } = require('@sknk/object-validator');
 import 
 let obj = {
   name: 'john',
@@ -39,8 +49,6 @@ Throws error on validation failure. On success returns the object.
 ## Validating function arguments
 You can also use this lib to validate the function arguments. Its done through a combination of `spread` operator and 
 `pipeArgs` utility to convert the arguments as objects for schema validation. 
-> Note : Since Array indexs are used as keys, when error is thrown, it throws with index as key. To have better error reporting
-> use `errCb` to customise the error. 
 ```
 import validator, {pipeArgs} from '@sknk/object-validator';
 
@@ -49,11 +57,13 @@ function add(a, b) {
 };
 
 function checkArgs(...args) {
-  let obj = Object.fromEntries(args.entries());
+  // convert to obj
+  let [a, b, opts] = args;
+  let obj = {a, b, opts}
   let schema = {
-    '0': ['+integer', '0-100'],
-    '1': ['+integer', '0-100'],
-    '2': ['object', {errCb: (e) => {
+    a: ['+integer', '0-100'],
+    b: ['+integer', '0-100'],
+    opts: ['object', {errCb: (e) => {
       return  new TypeError('Invalid Optional argument');
     }}]
   };

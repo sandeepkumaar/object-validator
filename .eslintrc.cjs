@@ -17,7 +17,8 @@ module.exports = {
     'import'
   ],
   rules: {
-    'import/extensions': ['error', 'always']
+    // check file extension for all files except for package imports
+    'import/extensions': ['error', 'ignorePackages']
   },
   //ignorePatterns: ['src/**/*.test.js']
 };

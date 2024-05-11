@@ -1,9 +1,13 @@
+# ignore generated files
 node_modules
-dist
+examples/node_modules
+# ignore dist excepts commonjs package.json
+dist/*
+!dist/package.json
 
 #ignore generated types
 index.d.ts
 src/**/*d.ts
 
-#ignore pack zip
+#ignore npm pack file
 *.tgz
